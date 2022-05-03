@@ -5,6 +5,14 @@ from copy import deepcopy
 from typing import Iterator, Dict, Optional, Tuple
 from rdkit import Chem
 from rdkit.Chem import Draw
+from contextlib import redirect_stderr
+from io import StringIO
+import mendeleev
+
+
+class FractionalOrderException(Exception):
+    def __init__(self, message):
+        super().__init__(message)
 
 
 class Molecule:
@@ -13,11 +21,13 @@ class Molecule:
     # Dunder methods #
     ##################
 
-    def __init__(self):
+    def __init__(self, allow_frac_order: bool = True):
         """
         Build an empty molecule
         """
         self._graph: networkx.Graph = networkx.Graph()
+        self._allow_frac_order: bool = allow_frac_order
+        self._valence_lookup: Dict[str, int] = dict()
 
     def __str__(self):
         return pysmiles.write_smiles(self.graph)
@@ -48,41 +58,32 @@ class Molecule:
     def free_valence_points(self) -> Iterator[Tuple[int, int]]:
         for i in self.graph.nodes:
 
+            # Work out the total bond order
+            # eminating from this atom
             total_order = 0
             for j in self.graph[i]:
                 total_order += self.graph[i][j]["order"]
 
-            assert abs(total_order - round(total_order)) < 10e-4
-            total_order = round(total_order)
-
+            # Work out the valence of the atom
             element = self.graph.nodes[i]["element"]
+            if element not in self._valence_lookup:
+                self._valence_lookup[element] = mendeleev.element(element).nvalence()
+            valence = self._valence_lookup[element]
 
-            valence = {
-                "H": 1,
-                "O": 2,
-                "C": 4,
-                "N": 3,
-                "Br": 1,
-                "S": 2
-            }[element]
+            # Check if the total order is an integer
+            diff = abs(total_order - round(total_order))
+            if diff > 10e-4:
+                if self._allow_frac_order:
+                    continue  # Skip fractional order
 
+                # Error out if we're not allowing fractional orders
+                bond_orders = [f"{self.graph.nodes[i]} - {self.graph[i][j]['order']} - {self.graph.nodes[j]}"
+                               for j in self.graph[i]]
+                raise FractionalOrderException(bond_orders)
+
+            total_order = round(total_order)
             if valence - total_order > 0:
                 yield i, valence - total_order
-
-    @property
-    def molecular_weight(self) -> int:
-        total = 0.0
-        for i in self.graph.nodes:
-            element = self.graph.nodes[i]["element"]
-            total += {
-                "H": 1.0,
-                "C": 12.0,
-                "O": 16.0,
-                "N": 16.0,
-                "S": 32.0,
-                "Br": 79.9
-            }[element]
-        return total
 
     ###########
     # Methods #
@@ -111,7 +112,11 @@ class Molecule:
         """
         if Chem.MolFromSmiles(smiles) is None:
             return None
-        self.graph = pysmiles.read_smiles(smiles, explicit_hydrogen=True)
+
+        io = StringIO()
+        with redirect_stderr(io):
+            self.graph = pysmiles.read_smiles(smiles, explicit_hydrogen=True)
+
         return self
 
     def random_fragment(self, min_size: int = 1, max_size: int = None) -> 'Molecule':
@@ -168,11 +173,16 @@ class Molecule:
 
         return frag
 
+    @property
+    def valid_smiles(self) -> bool:
+        return Chem.MolFromSmiles(str(self)) is not None
+
     def plot(self):
+        if not self.valid_smiles:
+            raise Exception(f"Tried to plot structure with invalid smiles string: {self}")
+
         smiles = str(self)
         m = Chem.MolFromSmiles(smiles)
-        if m is None:
-            raise Exception("Invalid smiles: " + smiles)
         Draw.ShowMol(m, size=(1024, 1024))
 
     def make_disjoint(self, other: 'Molecule') -> None:

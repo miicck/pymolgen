@@ -1,6 +1,6 @@
 import random
 
-from pymolgen.molecule import Molecule
+from pymolgen.molecule import Molecule, FractionalOrderException
 
 
 def test_molecule():
@@ -69,11 +69,6 @@ def test_hydrogenate():
 
 
 def test_hydrogenete_2():
-    m = Molecule().load_smiles("[N]C([CH]Cc:1:c:c(:c(OC):[c]:[c]1)O[CH2])[C][C]")
-    assert m.hydrogenate() == 13
-
-
-def test_hydrogenete_3():
     m = Molecule().load_smiles("[C]:[C]OC")
     assert m.hydrogenate() == 5
 
@@ -83,31 +78,18 @@ def test_hydrogenete_4():
     assert m.hydrogenate() == 8
 
 
-def test_gen_mol():
-    source_mols = []
-    with open("../datasets/smiles_chembl", "r") as smiles_chembl:
-        for smiles_string in smiles_chembl:
-            source_mols.append(Molecule().load_smiles(smiles_string))
-            if len(source_mols) >= 100:
-                break
+def test_ch4_from_bits():
+    m1 = Molecule().load_smiles("[H]")
+    m2 = Molecule().load_smiles("[CH]")
+    m3 = Molecule.randomly_glue_together(m1, m2)
+    m3.hydrogenate()
+    assert str(m3) == "C"
 
-    while True:
 
-        target_atom_count = random.randint(20, 100)
-
-        try:
-
-            traj = []
-            mol = Molecule().load_smiles("[H][H]")
-            mol.remove_random_atom("H")
-            traj.append(mol.copy())
-
-            while mol.atom_count < target_atom_count:
-                frag = random.choice(source_mols).random_fragment(max_size=16)
-                mol = Molecule.randomly_glue_together(mol, frag)
-                traj.append(mol.copy())
-
-            traj[-1].plot()
-
-        except:
-            pass
+def test_frac_valence():
+    m1 = Molecule(allow_frac_order=True).load_smiles(
+        "[N][C]([C]NC1CCCCC1)[C]")
+    m2 = Molecule(allow_frac_order=True).load_smiles(
+        "Cc:1:c:c(:c:c(:c1Oc:1:n:c(:n:[c]:2:c:c:[s]:[c]21)NC1CCN(C1)Cc:1:c:c:n:c:c1)[CH])[C]")
+    m3 = Molecule.randomly_glue_together(m1, m2)
+    m3.hydrogenate()
