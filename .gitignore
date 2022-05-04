@@ -3,3 +3,4 @@
 test/.cache/
 datasets/*
 !datasets/test_set
+!datasets/process_data.py

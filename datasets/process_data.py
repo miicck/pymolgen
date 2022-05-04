@@ -4,8 +4,8 @@ import random
 
 def convert_data():
     # Convert ChEMBL dataset
-    with open("datasets/ChEMBL.csv", "r") as f:
-        with open("datasets/smiles_chembl", "w") as f2:
+    with open("ChEMBL.csv", "r") as f:
+        with open("smiles_chembl", "w") as f2:
             reader = csv.reader(f, delimiter=';')
             for i, row in enumerate(reader):
                 if i == 0:
@@ -16,12 +16,12 @@ def convert_data():
                         f2.write(row[i_smiles] + "\n")
 
     all_smiles = []
-    with open("datasets/smiles_chembl", "r") as f:
+    with open("smiles_chembl", "r") as f:
         for line in f:
             all_smiles.append(line)
 
     subset = random.choices(all_smiles, k=1000)
-    with open("datasets/test_set", "w") as f:
+    with open("test_set", "w") as f:
         for s in subset:
             f.write(s)
 
