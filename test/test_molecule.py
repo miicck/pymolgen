@@ -1,5 +1,6 @@
 import random
 
+import rdkit.Chem
 from pymolgen.molecule import Molecule, FractionalOrderException
 
 
@@ -15,6 +16,11 @@ def test_cehmbl_molecules():
                 break
 
 
+def test_implicit_hydrogen():
+    m = Molecule().load_smiles("C")
+    assert m.atom_count == 5
+
+
 def test_order():
     m = Molecule().load_smiles("[H][H]")
     assert m.total_free_valence == 0
@@ -25,7 +31,6 @@ def test_fragments():
     assert m.atom_count == 2
 
     f = m.random_fragment()
-    assert len(list(f.free_valence_points)) == 1
     assert f.total_free_valence == 1
 
 
@@ -43,6 +48,7 @@ def test_glue_h2():
     m3 = Molecule.randomly_glue_together(f1, f2)
     assert m3.atom_count == 2
     assert m3.total_free_valence == 0
+
     assert str(m3) == "[H][H]"
 
 
@@ -50,7 +56,7 @@ def test_glue_ch3s():
     # Create a CH3 by removing a hydrogen from methane
     m1 = Molecule().load_smiles("C")
     assert m1.atom_count == 5
-    assert m1.remove_random_atom("H")
+    m1 = m1.remove_random_atom("H")
     assert m1.total_free_valence == 1
 
     m2 = m1.copy()
@@ -61,14 +67,20 @@ def test_glue_ch3s():
     assert str(m3) == "CC"
 
 
+def test_hydrogen_ion():
+    m1 = Molecule().load_smiles("[H]")
+    assert m1.atom_count == 1
+    assert m1.total_free_valence == 1
+
+
 def test_hydrogenate():
     m1 = Molecule().load_smiles("C")
-    m1.remove_random_atom("H")
+    m1 = m1.remove_random_atom("H")
     assert m1.hydrogenate() == 1
     assert str(m1) == "C"
 
 
-def test_hydrogenete_2():
+def test_hydrogenete_aromatic_fragment():
     m = Molecule().load_smiles("[C]:[C]OC")
     assert m.hydrogenate() == 5
 
@@ -79,15 +91,10 @@ def test_hydrogenete_4():
 
 
 def test_hydrogenete_5():
-    # Before hydrogenation
     m1 = Molecule().load_smiles(
         "O=C1CN2[C](CSc:3:n:n:c(:[o]3)c:3:c:[c]:4:[c](:c(:n3)c:3:c:c:c:c(:c3)[N+]([O-])=O)"
         ":[nH]:[c]:3:c:c:c:c:[c]43)[C]N3CC(NC(C3C2C(N1)=O)=O)=O")
-
-    assert m1.valid_smiles
-    m2 = m1.copy()
-    m2.hydrogenate()
-    assert m2.valid_smiles
+    m1.hydrogenate()
 
 
 def test_ch4_from_bits():

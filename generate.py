@@ -59,21 +59,13 @@ def generate_from_fragments(
                 mol = frag
                 continue
 
-            # We've somehow generated an invalid molecule
-            if not mol.valid_smiles:
-                break
-
             # Yield acceptable molecule
             if accept(mol):
                 yield mol
+                break
 
-            try:
-                # Add a random fragment
-                mol = Molecule.randomly_glue_together(mol, frag)
-            except FractionalOrderException:
-                print(mol)
-                print(frag)
-                raise FractionalOrderException
+            # Add a random fragment
+            mol = Molecule.randomly_glue_together(mol, frag)
 
             if mol == None:
                 break  # Molecule has no free valence
