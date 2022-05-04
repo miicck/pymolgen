@@ -14,4 +14,10 @@ def test_gen_chembl():
         return mol.atom_count > 40
 
     for mol in generate_from_fragments(smiles, accept_mol):
-        mol.plot()
+        smiles_before_h = str(mol)
+        mol.hydrogenate()
+        smiles_after_h = str(mol)
+        if not mol.plot(timeout=0.5):
+            raise Exception("Could not plot invalid smiles (before/after hydrogenation):\n"
+                            f"{smiles_before_h}\n"
+                            f"{smiles_after_h}")

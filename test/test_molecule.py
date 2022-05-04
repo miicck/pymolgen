@@ -64,7 +64,7 @@ def test_glue_ch3s():
 def test_hydrogenate():
     m1 = Molecule().load_smiles("C")
     m1.remove_random_atom("H")
-    m1.hydrogenate()
+    assert m1.hydrogenate() == 1
     assert str(m1) == "C"
 
 
@@ -76,6 +76,18 @@ def test_hydrogenete_2():
 def test_hydrogenete_4():
     m = Molecule().load_smiles("[O]c:1:c:c2:c([C]3[CH][CH][C](C([CH][C]3C(CC2)NC(=O)C)=O)[Br]):c(:c1[O])OC")
     assert m.hydrogenate() == 8
+
+
+def test_hydrogenete_5():
+    # Before hydrogenation
+    m1 = Molecule().load_smiles(
+        "O=C1CN2[C](CSc:3:n:n:c(:[o]3)c:3:c:[c]:4:[c](:c(:n3)c:3:c:c:c:c(:c3)[N+]([O-])=O)"
+        ":[nH]:[c]:3:c:c:c:c:[c]43)[C]N3CC(NC(C3C2C(N1)=O)=O)=O")
+
+    assert m1.valid_smiles
+    m2 = m1.copy()
+    m2.hydrogenate()
+    assert m2.valid_smiles
 
 
 def test_ch4_from_bits():

@@ -1,4 +1,6 @@
 import random
+import time
+
 import networkx
 import pysmiles
 from copy import deepcopy
@@ -7,7 +9,7 @@ from rdkit import Chem
 from rdkit.Chem import Draw
 from contextlib import redirect_stderr
 from io import StringIO
-import mendeleev
+import multiprocessing
 
 
 class FractionalOrderException(Exception):
@@ -25,9 +27,8 @@ class Molecule:
         """
         Build an empty molecule
         """
-        self._graph: networkx.Graph = networkx.Graph()
+        self._graph: Optional[networkx.Graph] = None
         self._allow_frac_order: bool = allow_frac_order
-        self._valence_lookup: Dict[str, int] = dict()
 
     def __str__(self):
         return pysmiles.write_smiles(self.graph)
@@ -38,11 +39,22 @@ class Molecule:
 
     @property
     def graph(self) -> networkx.Graph:
+        if self._graph is None:
+            self.graph = networkx.Graph()
         return self._graph
 
     @graph.setter
     def graph(self, val: networkx.Graph):
         self._graph = val
+        if networkx.is_frozen(val):
+            raise Exception("Tried to freeze graph!")
+
+        # If there are multiple disonnected molecules, take the largest
+        ccs = list(networkx.connected_components(val))
+        if len(ccs) > 1:
+            largest_cc = max(ccs, key=len)
+            val = networkx.Graph(val.subgraph(largest_cc))
+
         for i in self._graph.nodes:
             self._graph.nodes[i]["stereo"] = None
 
@@ -66,9 +78,21 @@ class Molecule:
 
             # Work out the valence of the atom
             element = self.graph.nodes[i]["element"]
-            if element not in self._valence_lookup:
-                self._valence_lookup[element] = mendeleev.element(element).nvalence()
-            valence = self._valence_lookup[element]
+
+            valence = {
+                "H": 1,
+                "O": 2,
+                "C": 4,
+                "N": 3,
+                "Br": 1,
+                "S": 2,
+                "F": 1,
+                "Cl": 1,
+                "I": 1,
+                "P": 3,
+                "Na": 1,
+                "B": 3
+            }[element]
 
             # Check if the total order is an integer
             diff = abs(total_order - round(total_order))
@@ -137,7 +161,6 @@ class Molecule:
             A fragment of this molecule, with apropritate
             free valence points along cleaved bonds
         """
-
         # Pick the size of the fragment
         if max_size is None or max_size > self.atom_count - 1:
             max_size = self.atom_count - 1
@@ -159,15 +182,16 @@ class Molecule:
             nodes.add(random.choice(list(neighbours)))
 
         frag = Molecule()
-        frag.graph = self.graph.subgraph(nodes)
+        frag.graph = networkx.Graph(self.graph.subgraph(nodes))
 
         # Look for broken bonds
         for i in nodes:
             for n in self.graph[i]:
                 if n in nodes:
                     continue
-
                 # Bond between i -> n has been broken
+
+                # Don't allow breaking of aromatic bonds
                 if self.graph.nodes[i]["aromatic"] and self.graph.nodes[n]["aromatic"]:
                     return self.random_fragment(min_size=min_size, max_size=max_size)
 
@@ -177,13 +201,23 @@ class Molecule:
     def valid_smiles(self) -> bool:
         return Chem.MolFromSmiles(str(self)) is not None
 
-    def plot(self):
+    def plot(self, timeout: float = None) -> bool:
         if not self.valid_smiles:
-            raise Exception(f"Tried to plot structure with invalid smiles string: {self}")
+            return False
 
-        smiles = str(self)
-        m = Chem.MolFromSmiles(smiles)
-        Draw.ShowMol(m, size=(1024, 1024))
+        def plot_on_thread():
+            m = Chem.MolFromSmiles(str(self))
+            Draw.ShowMol(m, size=(1024, 1024))
+
+        if timeout is None:
+            plot_on_thread()
+        else:
+            p = multiprocessing.Process(target=plot_on_thread)
+            p.start()
+            time.sleep(timeout)
+            p.terminate()
+
+        return True
 
     def make_disjoint(self, other: 'Molecule') -> None:
         """
@@ -195,48 +229,67 @@ class Molecule:
         other
             Molecule that we want to make disjoint to
         """
-        i_new = max(i for i in other.graph.nodes)
-        i_new = max(i_new, max(i for i in self.graph.nodes))
-        i_new += 1
+        i_new = max(list(other.graph.nodes) + list(self.graph.nodes)) + 1
 
         for i in self.graph.nodes:
             if i in other.graph.nodes:
                 self.graph = networkx.relabel_nodes(self.graph, {i: i_new})
                 i_new += 1
 
-        for i in self.graph.nodes:
-            assert i not in other.graph.nodes
+        assert len(set(self.graph.nodes).intersection(set(other.graph.nodes))) == 0
 
     def remove_random_atom(self, element: str = None) -> bool:
+        """
+        Remove a random leaf atom (only bonded to one other atom) from the molecule.
 
+        Parameters
+        ----------
+        element
+            Optionally constrain the element removed.
+
+        Returns
+        -------
+        True if successful
+        """
         # Get the list of possible nodes to remove (without breaking the molecule apart)
         nodes = list(n for n in self.graph.nodes if len(self.graph[n]) == 1)
         if element is not None:
             nodes = [n for n in nodes if self.graph.nodes[n]["element"].upper() == element.upper()]
-
         if len(nodes) == 0:
             return False
-
-        to_remove = random.choice(nodes)
-        self.graph.remove_node(to_remove)
+        self.graph.remove_node(random.choice(nodes))
         return True
 
     def hydrogenate(self) -> int:
         """
         Terminates all free valence in this molecule with hydrogen
         """
-        new_graph = self.graph.copy()
+
+        if False:
+            added = 0
+            while True:
+
+                h_ion = Molecule().load_smiles("[H]")
+                new_mol = Molecule.randomly_glue_together(self, h_ion)
+                if new_mol is None:
+                    break
+
+                added += 1
+                self.graph = new_mol.graph
+
+            return added
 
         added = 0
-        for i, v in self.free_valence_points:
+        offset = max(self.graph.nodes)
+        for i, v in tuple(self.free_valence_points):
 
             for j in range(v):
                 added += 1
-                new_node = max(new_graph.nodes) + 1
-                new_graph.add_node(new_node, element="H")
-                new_graph.add_edge(i, new_node, order=1)
+                new_index = offset + added
 
-        self.graph = new_graph
+                self.graph.add_node(new_index, element="H")
+                self.graph.add_edge(i, new_index, order=1)
+
         assert self.total_free_valence == 0
         return added
 
@@ -267,10 +320,6 @@ class Molecule:
         # Create a copy of molecule b that does not share node ids with molecule a
         molecule_b = molecule_b.copy()
         molecule_b.make_disjoint(molecule_a)
-
-        # Check that the above worked
-        for n in molecule_b.graph.nodes:
-            assert n not in molecule_a.graph.nodes
 
         # Choose the pair of free valence points to glue together
         a_point, a_valence = random.choice(list(molecule_a.free_valence_points))
