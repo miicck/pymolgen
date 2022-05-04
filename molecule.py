@@ -234,7 +234,6 @@ class Molecule:
         """
         Show a plot of this molecule.
         """
-
         def plot_on_thread():
             Draw.ShowMol(self.to_rdkit(), size=(1024, 1024))
 
