@@ -11,8 +11,7 @@ def test_gen():
     def accept_mol(mol: Molecule):
         return mol.atom_count > 40
 
-    for mol in generate_from_fragments(smiles, accept_mol):
-        try:
-            mol.plot(timeout=0.5)
-        except:
-            pass
+    for i, mol in enumerate(generate_from_fragments(smiles, accept_mol)):
+        assert mol is not None
+        if i > 100:
+            break
