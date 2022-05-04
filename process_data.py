@@ -1,4 +1,5 @@
 import csv
+import random
 
 
 def convert_data():
@@ -13,6 +14,16 @@ def convert_data():
                     smiles = row[i_smiles].strip()
                     if len(smiles) > 0:
                         f2.write(row[i_smiles] + "\n")
+
+    all_smiles = []
+    with open("datasets/smiles_chembl", "r") as f:
+        for line in f:
+            all_smiles.append(line)
+
+    subset = random.choices(all_smiles, k=1000)
+    with open("datasets/test_set", "w") as f:
+        for s in subset:
+            f.write(s)
 
 
 convert_data()

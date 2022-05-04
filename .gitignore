@@ -1,4 +1,5 @@
 .idea/
 *pycache*
-datasets/
 test/.cache/
+datasets/*
+!datasets/test_set

@@ -3,12 +3,8 @@ import time
 import networkx
 from copy import deepcopy
 from typing import Iterator, Dict, Optional, Tuple, Set, List
-
-import rdkit.Chem
 from rdkit import Chem
 from rdkit.Chem import Draw
-from contextlib import redirect_stderr
-from io import StringIO
 import multiprocessing
 
 
@@ -240,7 +236,7 @@ class Molecule:
         """
 
         def plot_on_thread():
-            Draw.ShowMol(self.to_rdkit(), size=(1024, 1024), kekulize=False)
+            Draw.ShowMol(self.to_rdkit(), size=(1024, 1024))
 
         if timeout is None:
             plot_on_thread()

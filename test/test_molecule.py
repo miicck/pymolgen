@@ -82,6 +82,13 @@ def test_hydrogenate():
 
 def test_hydrogenete_aromatic_fragment():
     m = Molecule().load_smiles("[C]:[C]OC")
+
+
+    rdkit.Chem.Draw.ShowMol(rdkit.Chem.MolFromSmiles("[C]:[C]OC"))
+
+    m.plot()
+
+    m.plot()
     assert m.hydrogenate() == 5
 
 

@@ -1,12 +1,10 @@
-import random
-
 from pymolgen.molecule import Molecule
 from pymolgen.generate import generate_from_fragments
 
 
-def test_gen_chembl():
+def test_gen():
     smiles = []
-    with open("../datasets/smiles_chembl", "r") as smiles_chembl:
+    with open("../datasets/test_set", "r") as smiles_chembl:
         for line in smiles_chembl:
             smiles.append(line)
 
