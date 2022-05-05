@@ -6,6 +6,25 @@ from typing import Iterator, Dict, Optional, Tuple, Set, List
 from rdkit import Chem
 from rdkit.Chem import Draw
 import multiprocessing
+from enum import Enum
+from pymolgen.bond_generator import BondGenerator
+
+
+class BondType(Enum):
+    SINGLE = 1
+    AROMATIC = 2
+    DOUBLE = 3
+    TRIPLE = 4
+
+    @staticmethod
+    def from_order(order: float) -> 'BondType':
+        half_orders = round(order * 2)
+        return {
+            2: BondType.SINGLE,
+            3: BondType.AROMATIC,
+            4: BondType.DOUBLE,
+            6: BondType.TRIPLE
+        }[half_orders]
 
 
 class FractionalOrderException(Exception):
@@ -234,6 +253,7 @@ class Molecule:
         """
         Show a plot of this molecule.
         """
+
         def plot_on_thread():
             Draw.ShowMol(self.to_rdkit(), size=(1024, 1024))
 
@@ -351,21 +371,22 @@ class Molecule:
                 if i >= j:
                     continue  # Avoid double counting
 
-                order = graph_to_export[i][j]["order"]
+                bond_type = BondType.from_order(graph_to_export[i][j]["order"])
 
-                type = {
-                    2: Chem.BondType.SINGLE,
-                    3: Chem.BondType.AROMATIC,
-                    4: Chem.BondType.DOUBLE,
-                    6: Chem.BondType.TRIPLE
-                }[round(order * 2)]
-
-                mol.AddBond(ids[i], ids[j], type)
+                mol.AddBond(ids[i], ids[j], {
+                    BondType.SINGLE: Chem.BondType.SINGLE,
+                    BondType.AROMATIC: Chem.BondType.AROMATIC,
+                    BondType.DOUBLE: Chem.BondType.DOUBLE,
+                    BondType.TRIPLE: Chem.BondType.TRIPLE
+                }[bond_type])
 
         return mol
 
     @staticmethod
-    def randomly_glue_together(molecule_a: 'Molecule', molecule_b: 'Molecule') -> Optional['Molecule']:
+    def randomly_glue_together(
+            molecule_a: 'Molecule',
+            molecule_b: 'Molecule',
+            bond_generator: BondGenerator) -> Optional['Molecule']:
         """
         Given two molecules, attempt to glue them together by creating a bond
         between free valence points. Returns None if no compatible valence points exist.
@@ -397,15 +418,14 @@ class Molecule:
         a_valence = molecule_a.free_valence(a_point)
         b_valence = molecule_b.free_valence(b_point)
 
-        # Work out the maximum bond order between these two valence points
-        max_order = min(a_valence, b_valence)
-        diff = abs(max_order - round(max_order))
-        if diff > 10e-3:
-            raise FractionalOrderException
-        max_order = round(max_order)
-
         # The order of the new bond
-        new_order = random.randint(1, max_order)
+        new_order = bond_generator.generate_and_check(
+            molecule_a.graph.nodes[a_point]["element"],
+            molecule_b.graph.nodes[b_point]["element"],
+            a_valence, b_valence)
+
+        if new_order < 0:
+            return None
 
         # Build the glued-together molecule
         mol = Molecule()

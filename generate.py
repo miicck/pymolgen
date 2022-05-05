@@ -1,11 +1,36 @@
 from pymolgen.molecule import Molecule, FractionalOrderException
-from typing import Iterable, Iterator, Callable
+from pymolgen.bond_generator import BondGenerator
+from typing import Iterable, Iterator, Callable, List, Dict
 import random
+
+
+class SmilesDataset:
+
+    def __init__(self, smiles: Iterable[str]):
+        self.smiles: List[str] = list(smiles)
+        self.mols: Dict[int, Molecule] = dict()
+
+    def random_molecule(self) -> Molecule:
+        i = random.randint(0, len(self.smiles) - 1)
+
+        # Retrieve existing molecule
+        if i in self.mols:
+            return self.mols[i]
+
+        new_mol = Molecule().load_smiles(self.smiles[i])
+        if new_mol is None:
+            # Loading molecule failed, try again
+            return self.random_molecule()
+
+        # Store and return new molecule
+        self.mols[i] = new_mol
+        return new_mol
 
 
 def generate_from_fragments(
         source_smiles: Iterable[str],
         accept: Callable[[Molecule], bool],
+        bond_generator: BondGenerator,
         min_frag_size: int = 1,
         max_frag_size: int = None) -> Iterator[Molecule]:
     """
@@ -19,6 +44,8 @@ def generate_from_fragments(
     accept
         Function to determine if an intermediate
         fragment structure is acceptable as a generated molecule
+    bond_generator
+        Object used to generate new bonds to glue fragments together
     min_frag_size
         The minimum size of fragments to generate
     max_frag_size
@@ -28,6 +55,9 @@ def generate_from_fragments(
     -------
     An iterator of generated molecules. Will iterate forever.
     """
+
+    dataset = SmilesDataset(source_smiles)
+
     source_mols = []
     saved_mols = dict()
 
@@ -37,23 +67,8 @@ def generate_from_fragments(
 
         while True:
 
-            # Get a random fragment to add
-            rand_smiles = random.choice(source_smiles)
-            if rand_smiles in saved_mols:
-                # Recover molecule from already-parsed smiles string
-                mol_to_frag = saved_mols[rand_smiles]
-            else:
-                # Attempt to load a new molecule from a random smiles string
-                try:
-                    mol_to_frag = Molecule().load_smiles(rand_smiles)
-                    if mol_to_frag is None:
-                        continue
-                except:
-                    continue
-
-                saved_mols[rand_smiles] = mol_to_frag
-
-            frag = mol_to_frag.random_fragment(min_size=min_frag_size, max_size=max_frag_size)
+            # Get a random fragment from the dataset
+            frag = dataset.random_molecule().random_fragment(min_size=min_frag_size, max_size=max_frag_size)
 
             if mol is None:
                 mol = frag
@@ -65,7 +80,4 @@ def generate_from_fragments(
                 break
 
             # Add a random fragment
-            mol = Molecule.randomly_glue_together(mol, frag)
-
-            if mol == None:
-                break  # Molecule has no free valence
+            mol = Molecule.randomly_glue_together(mol, frag, bond_generator)

@@ -1,7 +1,7 @@
 import random
-
 import rdkit.Chem
 from pymolgen.molecule import Molecule, FractionalOrderException
+from pymolgen.bond_generator import RandomBondGenerator
 
 
 def test_molecule():
@@ -44,7 +44,7 @@ def test_glue_h2():
     assert f2.total_free_valence == 1
 
     # Glue them together
-    m3 = Molecule.randomly_glue_together(f1, f2)
+    m3 = Molecule.randomly_glue_together(f1, f2, RandomBondGenerator())
     assert m3.atom_count == 2
     assert m3.total_free_valence == 0
 
@@ -61,7 +61,7 @@ def test_glue_ch3s():
     m2 = m1.copy()
     assert m2.total_free_valence == 1
 
-    m3 = Molecule.randomly_glue_together(m1, m2)
+    m3 = Molecule.randomly_glue_together(m1, m2, RandomBondGenerator())
     assert m3.total_free_valence == 0
     assert str(m3) == "CC"
 
@@ -99,7 +99,7 @@ def test_hydrogenete_5():
 def test_ch4_from_bits():
     m1 = Molecule().load_smiles("[H]")
     m2 = Molecule().load_smiles("[CH]")
-    m3 = Molecule.randomly_glue_together(m1, m2)
+    m3 = Molecule.randomly_glue_together(m1, m2, RandomBondGenerator())
     m3.hydrogenate()
     assert str(m3) == "C"
 
@@ -109,5 +109,5 @@ def test_frac_valence():
         "[N][C]([C]NC1CCCCC1)[C]")
     m2 = Molecule(allow_frac_order=True).load_smiles(
         "Cc:1:c:c(:c:c(:c1Oc:1:n:c(:n:[c]:2:c:c:[s]:[c]21)NC1CCN(C1)Cc:1:c:c:n:c:c1)[CH])[C]")
-    m3 = Molecule.randomly_glue_together(m1, m2)
+    m3 = Molecule.randomly_glue_together(m1, m2, RandomBondGenerator())
     m3.hydrogenate()
