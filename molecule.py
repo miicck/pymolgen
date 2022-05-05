@@ -255,7 +255,9 @@ class Molecule:
         """
 
         def plot_on_thread():
-            Draw.ShowMol(self.to_rdkit(), size=(1024, 1024))
+            to_plot = self.copy()
+            to_plot.hydrogenate()  # Helps with rdkit complaining about unkekulized atoms
+            Draw.ShowMol(to_plot.to_rdkit(), size=(1024, 1024))
 
         if timeout is None:
             plot_on_thread()
