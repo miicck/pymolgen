@@ -249,7 +249,7 @@ class Molecule:
             return self.random_fragment(min_size=min_size, max_size=max_size)
         return frag
 
-    def plot(self, timeout: float = None):
+    def plot(self, timeout: float = None, title="Molecule"):
         """
         Show a plot of this molecule.
         """
@@ -257,7 +257,7 @@ class Molecule:
         def plot_on_thread():
             to_plot = self.copy()
             to_plot.hydrogenate()  # Helps with rdkit complaining about unkekulized atoms
-            Draw.ShowMol(to_plot.to_rdkit(), size=(1024, 1024))
+            Draw.ShowMol(to_plot.to_rdkit(), size=(1024, 1024), title=title)
 
         if timeout is None:
             plot_on_thread()
@@ -342,7 +342,7 @@ class Molecule:
                 continue  # Already saturated
 
             if not is_integer_order(v):
-                print(f"Non-integer order {v} detected in hydrogenation!")
+                print(f"Non-integer free valence {v} detected in hydrogenation")
                 v = float(int(v))
 
             for j in range(to_integer_order(v)):

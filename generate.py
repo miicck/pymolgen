@@ -1,6 +1,6 @@
 from pymolgen.molecule import Molecule, FractionalOrderException
 from pymolgen.bond_generator import BondGenerator
-from typing import Iterable, Iterator, Callable, List, Dict
+from typing import Iterable, Iterator, Callable, List, Dict, Tuple, Union
 import random
 
 
@@ -10,21 +10,28 @@ class SmilesDataset:
         self.smiles: List[str] = list(smiles)
         self.mols: Dict[int, Molecule] = dict()
 
-    def random_molecule(self) -> Molecule:
-        i = random.randint(0, len(self.smiles) - 1)
-
+    def __getitem__(self, i: int) -> Molecule:
         # Retrieve existing molecule
         if i in self.mols:
             return self.mols[i]
 
-        new_mol = Molecule().load_smiles(self.smiles[i])
-        if new_mol is None:
-            # Loading molecule failed, try again
-            return self.random_molecule()
-
         # Store and return new molecule
+        new_mol = Molecule().load_smiles(self.smiles[i])
         self.mols[i] = new_mol
         return new_mol
+
+    def __len__(self):
+        return len(self.smiles)
+
+    def __iter__(self):
+        for i in range(len(self)):
+            yield self[i]
+
+    def get_smiles(self, i: int) -> str:
+        return self.smiles[i]
+
+    def random_molecule(self) -> Union[Molecule]:
+        return self[random.randint(0, len(self.smiles) - 1)]
 
 
 def generate_from_fragments(
@@ -32,7 +39,7 @@ def generate_from_fragments(
         accept: Callable[[Molecule], bool],
         bond_generator: BondGenerator,
         min_frag_size: int = 1,
-        max_frag_size: int = None) -> Iterator[Molecule]:
+        max_frag_size: int = None) -> Iterator[Tuple[Molecule, int]]:
     """
     Given a set of source smiles strings, generate molecules
     by gluing together fragments from the set.
@@ -58,12 +65,10 @@ def generate_from_fragments(
 
     dataset = SmilesDataset(source_smiles)
 
-    source_mols = []
-    saved_mols = dict()
-
     while True:
 
         mol = None
+        fragments = 0
 
         while True:
 
@@ -72,12 +77,14 @@ def generate_from_fragments(
 
             if mol is None:
                 mol = frag
+                fragments = 1
                 continue
 
             # Yield acceptable molecule
             if accept(mol):
-                yield mol
+                yield mol, fragments
                 break
 
             # Add a random fragment
             mol = Molecule.randomly_glue_together(mol, frag, bond_generator)
+            fragments += 1

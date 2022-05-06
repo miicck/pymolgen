@@ -3,6 +3,8 @@ import rdkit.Chem
 from pymolgen.molecule import Molecule, FractionalOrderException
 from pymolgen.bond_generator import RandomBondGenerator
 
+# Ensure same generation each time
+random.seed(1024)
 
 def test_molecule():
     mol = Molecule().load_smiles("CSc1ncccc1C(=O)OCc1ccccc1F")
