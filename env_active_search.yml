@@ -1,0 +1,4 @@
+name: active_search-2022.01
+dependencies:
+ - networkx
+ - matplotlib

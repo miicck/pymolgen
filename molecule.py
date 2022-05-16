@@ -75,7 +75,10 @@ class Molecule:
             raise Exception("Tried to freeze graph!")
 
         # Check resulting graph has everything we need
+        n = 0
         for i in val.nodes:
+            print(n, val.nodes[i])
+            n += 1
             assert val.nodes[i]["valence"] is not None
             assert val.nodes[i]["element"] is not None
 
@@ -166,6 +169,65 @@ class Molecule:
         for bond in rdmol.GetBonds():
             bond: Chem.Bond
             graph.add_edge(bond.GetBeginAtomIdx(), bond.GetEndAtomIdx(), order=bond.GetBondTypeAsDouble())
+
+        self.graph = graph
+        return self
+
+    def load_bru(self, brufilename: str) -> 'Molecule':
+        """
+        Loads this molecule from a bru format file.
+
+        Parameters
+        ----------
+        brufilename
+            Name of bru format file
+
+        Returns
+        -------
+        self if successful, otherwise None
+        """
+
+        with open(brufilename) as brufile:
+            brufilelines = brufile.readlines()
+
+        atoms = []
+        bonds = []
+
+        for line in brufilelines:
+            if 'atom' in line:
+                atoms.append(line.split()[1])
+            if 'bond' in line:
+                atom1 = int(line.split()[1])
+                atom2 = int(line.split()[2])
+                order = int(line.split()[3])
+                bonds.append([atom1, atom2, order])
+
+        print(atoms)
+        print(bonds)
+
+        graph = networkx.Graph()
+
+        atom_valences = {
+        'H':1,
+        'C':4,
+        'N':3,
+        'O':2,
+        'S':2,
+        'F':1,
+        'Cl':1,
+        'Br':1
+        }
+
+        for n in range(len(atoms)):
+            atom = atoms[n]
+            total_valence = atom_valences[atom]
+            graph.add_node(n, element=atom, valence=total_valence)
+
+        for bond in bonds:
+            atom1 = bond[0]
+            atom2 = bond[1]
+            order = bond[2]
+            graph.add_edge(atom1, atom2, order=order)
 
         self.graph = graph
         return self
@@ -267,6 +329,9 @@ class Molecule:
             time.sleep(timeout)
             p.terminate()
 
+    def print_atom_indices_and_bonds(self):
+        raise NotImplementedError
+
     def make_disjoint(self, other: 'Molecule') -> None:
         """
         Relabel the atoms in this molecule so
@@ -308,6 +373,12 @@ class Molecule:
         to_remove = random.choice(nodes)
         keep_nodes = set(self.graph.nodes) - {to_remove}
         return self.get_fragment(keep_nodes)
+
+    def remove_atom(self, index: int) -> 'Molecule':
+        """
+        Removes the atom with the given index, and returns the new molecule.
+        """
+        return self.get_fragment(set(self.graph.nodes) - {index})
 
     def saturate_single_aromatic_fragment(self) -> bool:
 
