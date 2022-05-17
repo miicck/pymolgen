@@ -1,15 +1,16 @@
 import molecule
 import generate
 import bond_generator
+import networkx
 
 min_frag_size = 1
 max_frag_size = 50
 
 mol = molecule.Molecule()
 
-mol.load_bru('parent2.bru')
+mol.load_bru('parent.txt')
 
-mol.remove_atom(30)
+#mol.remove_atom(30)
 
 print(mol.attach_points)
 
@@ -23,6 +24,7 @@ dataset = generate.SmilesDataset(smiles)
 #generate a random fragment
 frag = dataset.random_molecule().random_fragment(min_size=min_frag_size, max_size=max_frag_size)
 
+networkx.draw(frag)
 frag.plot()
 
 print(frag.attach_points)
@@ -30,4 +32,5 @@ print(frag.attach_points)
 # Add generated random fragment to mol
 mol = molecule.Molecule.randomly_glue_together(mol, frag, bond_generator.RandomBondGenerator())
 
+networkx.draw(mol)
 mol.plot()

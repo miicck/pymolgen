@@ -173,6 +173,7 @@ class Molecule:
         self.graph = graph
         return self
 
+    #TO DO: make it get valence from original read molecule and set up open valence position to take attachment point into account
     def load_bru(self, brufilename: str) -> 'Molecule':
         """
         Loads this molecule from a bru format file.
@@ -202,6 +203,12 @@ class Molecule:
                 order = int(line.split()[3])
                 bonds.append([atom1, atom2, order])
 
+        self.graph = self.graph_from_atoms_bonds(atoms, bonds)
+        return self
+
+    @staticmethod
+    def graph_from_atoms_bonds(atoms, bonds):
+
         print(atoms)
         print(bonds)
 
@@ -221,6 +228,7 @@ class Molecule:
         for n in range(len(atoms)):
             atom = atoms[n]
             total_valence = atom_valences[atom]
+            print(n, atom, total_valence)
             graph.add_node(n, element=atom, valence=total_valence)
 
         for bond in bonds:
@@ -229,8 +237,76 @@ class Molecule:
             order = bond[2]
             graph.add_edge(atom1, atom2, order=order)
 
-        self.graph = graph
+        return graph
+
+
+    #TO DO: make it get valence from original read molecule and set up open valence position to take attachment point into account
+    def load_sdf(self, sdffilename: str) -> 'Molecule':
+        """
+        Loads this molecule from an SDF format file.
+
+        Parameters
+        ----------
+        sdffilename
+            Name of bru format file
+
+        Returns
+        -------
+        self if successful, otherwise None
+        """
+
+        atoms = []
+        bonds = []
+    
+        with open(sdffilename) as sdffile:
+            #sdffilelines = sdffile.readlines()
+
+            for line in sdffile:
+                if 'V2000' in line: 
+                    natoms = int(line.split()[0])
+                    break
+
+            n = 1
+            for line in sdffile:
+                print(line)
+                atom = line.split()[3]
+                atoms.append(atom)
+                if n == natoms: break
+                n += 1
+                
+            for line in sdffile:
+                if 'END' in line: break
+                print(line)
+                atom1 = int(line.split()[0]) - 1
+                atom2 = int(line.split()[1]) - 1
+                order = int(line.split()[2])
+                bonds.append([atom1, atom2, order])
+
+        self.graph = self.graph_from_atoms_bonds(atoms, bonds)
         return self
+
+    def write_sdf_from_graph(self, val, outfilename):
+        
+        if networkx.is_frozen(val):
+            raise Exception("Tried to freeze graph!")
+
+        # Check resulting graph has everything we need
+        n = 0
+        for i in val.nodes:
+            print(n, val.nodes[i])
+            n += 1
+            assert val.nodes[i]["valence"] is not None
+            assert val.nodes[i]["element"] is not None
+
+        for i in val.nodes:
+            for j in val[i]:
+                assert val[i][j]["order"] > 0
+
+        with open(outfilename, 'w') as outfile:
+            outfile.write('Molecule\n')
+            outfile.write(' pymolgen\n\n')
+
+            outfile.write(' %s %s  0  0  1  0  0  0  0  0999 V2000' %())
 
     def get_fragment(self, nodes: Set[int], allow_breaking_aromatic=False) -> 'Molecule':
         """
