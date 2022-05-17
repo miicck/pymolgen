@@ -1,5 +1,5 @@
 from pymolgen.molecule import Molecule, FractionalOrderException
-from pymolgen.molecule_formats import molecule_from_smiles
+from pymolgen.molecule_formats import molecule_from_smiles, molecule_from_sdf
 from pymolgen.bond_generator import BondGenerator
 from typing import Iterable, Iterator, Callable, List, Dict, Tuple, Union
 import random
@@ -23,7 +23,9 @@ class MoleculeDataset(ABC):
         return new_mol
 
     def random_molecule(self) -> Molecule:
-        return self[random.randint(0, len(self) - 1)]
+        random_molecule_i = random.randint(0, len(self) - 1)
+        #print('Random molecule i =', random_molecule_i)
+        return self[random_molecule_i]
 
     @abstractmethod
     def load_molecule(self, i: int) -> Molecule:
@@ -47,8 +49,20 @@ class SmilesDataset(MoleculeDataset):
         return len(self.smiles)
 
 
-def generate_from_fragments(
-        source_smiles: Iterable[str],
+class SDFDataset(MoleculeDataset):
+
+    def __init__(self, sdf_file_abspaths: Iterable[str]):
+        super().__init__()
+        self.sdf_file_abspaths: List[str] = list(sdf_file_abspaths)
+
+    def load_molecule(self, i: int) -> Molecule:
+        return molecule_from_sdf(self.sdf_file_abspaths[i])
+
+    def __len__(self):
+        return len(self.sdf_file_abspaths)
+
+def generate_from_molecules(
+        dataset: Iterable['Molecule'],
         accept: Callable[[Molecule], bool],
         bond_generator: BondGenerator,
         min_frag_size: int = 1,
@@ -76,8 +90,6 @@ def generate_from_fragments(
     An iterator of generated molecules. Will iterate forever.
     """
 
-    dataset = SmilesDataset(source_smiles)
-
     while True:
 
         mol = None
@@ -101,39 +113,3 @@ def generate_from_fragments(
             # Add a random fragment
             mol = Molecule.randomly_glue_together(mol, frag, bond_generator)
             fragments += 1
-
-
-def generate_from_sdf(
-        database_path: str,
-        accept: Callable[[Molecule], bool],
-        bond_generator: BondGenerator,
-        min_frag_size: int = 1,
-        max_frag_size: int = None) -> Iterator[Tuple[Molecule, int]]:
-
-    dataset_files = glob.glob(database_path, '*.sdf')
-    print(dataset_files)
-
-    while True:
-
-        mol = None
-        fragments = 0
-"""
-        while True:
-
-            # Get a random fragment from the dataset
-            frag = dataset.random_molecule().random_fragment(min_size=min_frag_size, max_size=max_frag_size)
-
-            if mol is None:
-                mol = frag
-                fragments = 1
-                continue
-
-            # Yield acceptable molecule
-            if accept(mol):
-                yield mol, fragments
-                break
-
-            # Add a random fragment
-            mol = Molecule.randomly_glue_together(mol, frag, bond_generator)
-            fragments += 1
-"""

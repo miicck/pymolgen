@@ -1,6 +1,6 @@
 import random
 from pymolgen.molecule import Molecule
-from pymolgen.generate import generate_from_fragments
+from pymolgen.generate import *
 from pymolgen.bond_generator import RandomBondGenerator
 
 # Ensure same generation each time
@@ -12,10 +12,14 @@ def test_gen():
         for line in smiles_chembl:
             smiles.append(line)
 
+    dataset = SmilesDataset(smiles)
+
     def accept_mol(mol: Molecule):
         return mol.atom_count > 40
 
-    for i, (mol, fragments) in enumerate(generate_from_fragments(smiles, accept_mol, RandomBondGenerator())):
+    for i, (mol, fragments) in enumerate(generate_from_molecules(dataset, accept_mol, RandomBondGenerator())):
         assert mol is not None
         if i > 100:
             break
+
+#def test_generate_from_sdf():

@@ -55,6 +55,19 @@ def molecule_to_smiles(mol: Molecule) -> str:
     from rdkit import Chem
     return Chem.MolToSmiles(molecule_to_rdkit(mol))
 
+def atom_valence(atom, bonds):
+    total_valence = 0
+    
+    for bond in bonds:
+        atom1 = bond[0]
+        atom2 = bond[1]
+        order = bond[2]
+
+        if atom1 == atom:
+            total_valence += order
+
+    return total_valence
+
 def graph_from_atoms_bonds(atoms: List[str], bonds: List[Tuple[int,int,int]]) -> 'Networkx graph':
     """
     Convert list of atoms and bonds to networkx graph
@@ -74,21 +87,9 @@ def graph_from_atoms_bonds(atoms: List[str], bonds: List[Tuple[int,int,int]]) ->
 
     graph = networkx.Graph()
 
-    atom_valences = {
-    'H':1,
-    'C':4,
-    'N':3,
-    'O':2,
-    'S':2,
-    'F':1,
-    'Cl':1,
-    'Br':1
-    }
-
     for n in range(len(atoms)):
         atom = atoms[n]
-        total_valence = atom_valences[atom]
-        print(n, atom, total_valence)
+        total_valence = atom_valence(n, bonds)
         graph.add_node(n, element=atom, valence=total_valence)
 
     for bond in bonds:
@@ -153,23 +154,22 @@ def molecule_from_sdf(sdffilename: str) -> 'Molecule':
 
     for line in sdffile:
         if 'V2000' in line: 
-            natoms = int(line.split()[0])
+            natoms = int(line[0:3].split()[0])
             break
 
     n = 1
     for line in sdffile:
-        print(line)
         atom = line.split()[3]
         atoms.append(atom)
         if n == natoms: break
         n += 1
         
     for line in sdffile:
-        if 'END' in line: break
-        print(line)
-        atom1 = int(line.split()[0]) - 1
-        atom2 = int(line.split()[1]) - 1
-        order = int(line.split()[2])
+        if 'END' in line:break
+        if 'CHG' in line: break
+        atom1 = int(line[0:3].split()[0]) - 1
+        atom2 = int(line[3:6].split()[0]) - 1
+        order = int(line[6:9].split()[0])
         bonds.append([atom1, atom2, order])
 
     mol = Molecule()
