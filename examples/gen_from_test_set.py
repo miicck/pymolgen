@@ -13,5 +13,6 @@ for mol, fragments in generate_from_fragments(
         smiles, lambda m: m.atom_count > 50, MaxOrderBondGenerator(), max_frag_size=20):
     try:
         mol.plot(title=f"Molecule from {fragments} fragments")
+        mol.plot_graph()
     except:
         pass
