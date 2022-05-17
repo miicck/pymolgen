@@ -3,9 +3,6 @@ import time
 import networkx
 from copy import deepcopy
 from typing import Iterator, Dict, Optional, Tuple, Set, List
-from rdkit import Chem
-from rdkit.Chem import Draw
-import multiprocessing
 from enum import Enum
 from pymolgen.bond_generator import BondGenerator
 import numpy as np
@@ -55,9 +52,6 @@ class Molecule:
         """
         self._graph: Optional[networkx.Graph] = None
         self._allow_frac_order: bool = allow_frac_order
-
-    def __str__(self):
-        return Chem.MolToSmiles(self.to_rdkit())
 
     ##############
     # Properties #
@@ -115,6 +109,14 @@ class Molecule:
     # Methods #
     ###########
 
+    def copy(self) -> 'Molecule':
+        """
+        Returns
+        -------
+        A deep copy of this molecule
+        """
+        return deepcopy(self)
+
     def total_order_of_bonds(self, i: int) -> float:
         """
         Returns
@@ -130,183 +132,6 @@ class Molecule:
         The unbonded valence of the atom i
         """
         return max(self.graph.nodes[i]["valence"] - self.total_order_of_bonds(i), 0.0)
-
-    def copy(self) -> 'Molecule':
-        """
-        Returns
-        -------
-        A deep copy of this molecule
-        """
-        return deepcopy(self)
-
-    def load_smiles(self, smiles: str) -> 'Molecule':
-        """
-        Loads this molecule from a smiles string.
-
-        Parameters
-        ----------
-        smiles
-            The smiles string to load.
-
-        Returns
-        -------
-        self if successful, otherwise None
-        """
-
-        rdmol: Chem.Mol = Chem.MolFromSmiles(smiles)
-        rdmol = Chem.AddHs(rdmol)
-        if rdmol is None:
-            return None
-
-        graph = networkx.Graph()
-
-        for atom in rdmol.GetAtoms():
-            atom: Chem.Atom
-            symbol = atom.GetSymbol()
-            total_valence = atom.GetTotalValence() + atom.GetNumRadicalElectrons()
-            graph.add_node(atom.GetIdx(), element=symbol, valence=total_valence)
-
-        for bond in rdmol.GetBonds():
-            bond: Chem.Bond
-            graph.add_edge(bond.GetBeginAtomIdx(), bond.GetEndAtomIdx(), order=bond.GetBondTypeAsDouble())
-
-        self.graph = graph
-        return self
-
-    #TO DO: make it get valence from original read molecule and set up open valence position to take attachment point into account
-    def load_bru(self, brufilename: str) -> 'Molecule':
-        """
-        Loads this molecule from a bru format file.
-
-        Parameters
-        ----------
-        brufilename
-            Name of bru format file
-
-        Returns
-        -------
-        self if successful, otherwise None
-        """
-
-        with open(brufilename) as brufile:
-            brufilelines = brufile.readlines()
-
-        atoms = []
-        bonds = []
-
-        for line in brufilelines:
-            if 'atom' in line:
-                atoms.append(line.split()[1])
-            if 'bond' in line:
-                atom1 = int(line.split()[1])
-                atom2 = int(line.split()[2])
-                order = int(line.split()[3])
-                bonds.append([atom1, atom2, order])
-
-        self.graph = self.graph_from_atoms_bonds(atoms, bonds)
-        return self
-
-    @staticmethod
-    def graph_from_atoms_bonds(atoms, bonds):
-
-        print(atoms)
-        print(bonds)
-
-        graph = networkx.Graph()
-
-        atom_valences = {
-        'H':1,
-        'C':4,
-        'N':3,
-        'O':2,
-        'S':2,
-        'F':1,
-        'Cl':1,
-        'Br':1
-        }
-
-        for n in range(len(atoms)):
-            atom = atoms[n]
-            total_valence = atom_valences[atom]
-            print(n, atom, total_valence)
-            graph.add_node(n, element=atom, valence=total_valence)
-
-        for bond in bonds:
-            atom1 = bond[0]
-            atom2 = bond[1]
-            order = bond[2]
-            graph.add_edge(atom1, atom2, order=order)
-
-        return graph
-
-
-    #TO DO: make it get valence from original read molecule and set up open valence position to take attachment point into account
-    def load_sdf(self, sdffilename: str) -> 'Molecule':
-        """
-        Loads this molecule from an SDF format file.
-
-        Parameters
-        ----------
-        sdffilename
-            Name of bru format file
-
-        Returns
-        -------
-        self if successful, otherwise None
-        """
-
-        atoms = []
-        bonds = []
-    
-        with open(sdffilename) as sdffile:
-            #sdffilelines = sdffile.readlines()
-
-            for line in sdffile:
-                if 'V2000' in line: 
-                    natoms = int(line.split()[0])
-                    break
-
-            n = 1
-            for line in sdffile:
-                print(line)
-                atom = line.split()[3]
-                atoms.append(atom)
-                if n == natoms: break
-                n += 1
-                
-            for line in sdffile:
-                if 'END' in line: break
-                print(line)
-                atom1 = int(line.split()[0]) - 1
-                atom2 = int(line.split()[1]) - 1
-                order = int(line.split()[2])
-                bonds.append([atom1, atom2, order])
-
-        self.graph = self.graph_from_atoms_bonds(atoms, bonds)
-        return self
-
-    def write_sdf_from_graph(self, val, outfilename):
-        
-        if networkx.is_frozen(val):
-            raise Exception("Tried to freeze graph!")
-
-        # Check resulting graph has everything we need
-        n = 0
-        for i in val.nodes:
-            print(n, val.nodes[i])
-            n += 1
-            assert val.nodes[i]["valence"] is not None
-            assert val.nodes[i]["element"] is not None
-
-        for i in val.nodes:
-            for j in val[i]:
-                assert val[i][j]["order"] > 0
-
-        with open(outfilename, 'w') as outfile:
-            outfile.write('Molecule\n')
-            outfile.write(' pymolgen\n\n')
-
-            outfile.write(' %s %s  0  0  1  0  0  0  0  0999 V2000' %())
 
     def get_fragment(self, nodes: Set[int], allow_breaking_aromatic=False) -> 'Molecule':
         """
@@ -389,45 +214,6 @@ class Molecule:
             frag = self.get_fragment(nodes)
             if frag is not None:
                 return frag
-
-    def plot(self, timeout: float = None, title="Molecule"):
-        """
-        Show a plot of this molecule.
-        """
-
-        def plot_on_thread():
-            to_plot = self.copy()
-            to_plot.hydrogenate()  # Helps with rdkit complaining about unkekulized atoms
-            Draw.ShowMol(to_plot.to_rdkit(), size=(1024, 1024), title=title)
-
-        if timeout is None:
-            plot_on_thread()
-        else:
-            p = multiprocessing.Process(target=plot_on_thread)
-            p.start()
-            time.sleep(timeout)
-            p.terminate()
-
-    def plot_graph(self):
-        """
-        Plots the underlying networkx graph of the molecule.
-        """
-        import matplotlib.pyplot as plt
-
-        pos = networkx.spring_layout(self.graph)
-
-        for i, j in self.graph.edges:
-            xs = pos[i][0], pos[j][0]
-            ys = pos[i][1], pos[j][1]
-            plt.plot(xs, ys, color="black")
-            plt.annotate(str(self.graph.edges[i, j]["order"]), (pos[i] + pos[j]) * 0.5)
-
-        for i in self.graph.nodes:
-            label = str(self.graph.nodes[i]["valence"])
-            label += f" [{i}" + ("c]" if self.is_cyclic(i) else "]")
-            plt.annotate(label, pos[i])
-
-        plt.show()
 
     def make_disjoint(self, other: 'Molecule') -> None:
         """
@@ -520,37 +306,6 @@ class Molecule:
                 self.graph.add_edge(i, new_index, order=1.0)
 
         return added
-
-    def to_rdkit(self) -> Chem.RWMol:
-        """
-        Converts to an RDkit molecule
-        """
-        mol = Chem.RWMol()
-
-        graph_to_export = self.graph.subgraph(i for i in self.graph if self.graph.nodes[i]["element"] != "H")
-        if len(graph_to_export) == 0:
-            graph_to_export = self.graph
-
-        for i in graph_to_export:
-            atom = Chem.Atom(graph_to_export.nodes[i]["element"])
-            mol.AddAtom(atom)
-
-        ids = {i: n for n, i in enumerate(graph_to_export.nodes)}
-        for i in graph_to_export:
-            for j in graph_to_export[i]:
-                if i >= j:
-                    continue  # Avoid double counting
-
-                bond_type = BondType.from_order(graph_to_export[i][j]["order"])
-
-                mol.AddBond(ids[i], ids[j], {
-                    BondType.SINGLE: Chem.BondType.SINGLE,
-                    BondType.AROMATIC: Chem.BondType.AROMATIC,
-                    BondType.DOUBLE: Chem.BondType.DOUBLE,
-                    BondType.TRIPLE: Chem.BondType.TRIPLE
-                }[bond_type])
-
-        return mol
 
     @staticmethod
     def randomly_glue_together(

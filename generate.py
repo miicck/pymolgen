@@ -1,4 +1,5 @@
 from pymolgen.molecule import Molecule, FractionalOrderException
+from pymolgen.molecule_formats import molecule_from_smiles
 from pymolgen.bond_generator import BondGenerator
 from typing import Iterable, Iterator, Callable, List, Dict, Tuple, Union
 import random
@@ -16,7 +17,7 @@ class SmilesDataset:
             return self.mols[i]
 
         # Store and return new molecule
-        new_mol = Molecule().load_smiles(self.smiles[i])
+        new_mol = molecule_from_smiles(self.smiles[i])
         self.mols[i] = new_mol
         return new_mol
 
