@@ -3,8 +3,6 @@ import rdkit.Chem
 from pymolgen.molecule import Molecule, FractionalOrderException
 from pymolgen.bond_generator import RandomBondGenerator
 
-# Ensure same generation each time
-random.seed(1024)
 
 def test_molecule():
     mol = Molecule().load_smiles("CSc1ncccc1C(=O)OCc1ccccc1F")
@@ -31,18 +29,18 @@ def test_fragments():
     m = Molecule().load_smiles("[H][H]")
     assert m.atom_count == 2
 
-    f = m.random_fragment()
+    f = m.get_fragment({0})
     assert f.total_free_valence == 1
 
 
 def test_glue_h2():
     # Create two free hydrogen atoms
     m1 = Molecule().load_smiles("[H][H]")
-    f1 = m1.random_fragment()
+    f1 = m1.get_fragment({0})
     assert f1.total_free_valence == 1
 
     m2 = Molecule().load_smiles("[H][H]")
-    f2 = m2.random_fragment()
+    f2 = m2.get_fragment({0})
     assert f2.total_free_valence == 1
 
     # Glue them together
