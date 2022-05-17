@@ -69,8 +69,7 @@ def molecule_from_bru(bru: str) -> Molecule:
     created molecule if successful, otherwise None
     """
 
-    with open(brufilename) as brufile:
-        brufilelines = brufile.readlines()
+    brufilelines = bru.split("\n")
 
     atoms = []
     bonds = []

@@ -1,7 +1,8 @@
 from pymolgen.molecule import Molecule
+from pymolgen.molecule_formats import molecule_to_rdkit
 
 
-def plot_molecule(self, timeout: float = None, title="Molecule"):
+def plot_molecule(molecule, timeout: float = None, title="Molecule"):
     """
     Show a plot of this molecule.
     """
@@ -9,9 +10,9 @@ def plot_molecule(self, timeout: float = None, title="Molecule"):
     import multiprocessing
 
     def plot_on_thread():
-        to_plot = self.copy()
+        to_plot = molecule.copy()
         to_plot.hydrogenate()  # Helps with rdkit complaining about unkekulized atoms
-        Draw.ShowMol(to_plot.to_rdkit(), size=(1024, 1024), title=title)
+        Draw.ShowMol(molecule_to_rdkit(to_plot), size=(1024, 1024), title=title)
 
     if timeout is None:
         plot_on_thread()
@@ -22,23 +23,23 @@ def plot_molecule(self, timeout: float = None, title="Molecule"):
         p.terminate()
 
 
-def plot_molecule_graph(self):
+def plot_molecule_graph(molecule):
     """
     Plots the underlying networkx graph of the molecule.
     """
     import matplotlib.pyplot as plt
 
-    pos = networkx.spring_layout(self.graph)
+    pos = networkx.spring_layout(molecule.graph)
 
-    for i, j in self.graph.edges:
+    for i, j in molecule.graph.edges:
         xs = pos[i][0], pos[j][0]
         ys = pos[i][1], pos[j][1]
         plt.plot(xs, ys, color="black")
-        plt.annotate(str(self.graph.edges[i, j]["order"]), (pos[i] + pos[j]) * 0.5)
+        plt.annotate(str(molecule.graph.edges[i, j]["order"]), (pos[i] + pos[j]) * 0.5)
 
-    for i in self.graph.nodes:
-        label = str(self.graph.nodes[i]["valence"])
-        label += f" [{i}" + ("c]" if self.is_cyclic(i) else "]")
+    for i in molecule.graph.nodes:
+        label = str(molecule.graph.nodes[i]["valence"])
+        label += f" [{i}" + ("c]" if molecule.is_cyclic(i) else "]")
         plt.annotate(label, pos[i])
 
     plt.show()
