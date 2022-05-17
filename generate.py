@@ -3,12 +3,13 @@ from pymolgen.molecule_formats import molecule_from_smiles
 from pymolgen.bond_generator import BondGenerator
 from typing import Iterable, Iterator, Callable, List, Dict, Tuple, Union
 import random
+import glob
+from abc import ABC, abstractmethod
 
 
-class SmilesDataset:
+class MoleculeDataset(ABC):
 
-    def __init__(self, smiles: Iterable[str]):
-        self.smiles: List[str] = list(smiles)
+    def __init__(self):
         self.mols: Dict[int, Molecule] = dict()
 
     def __getitem__(self, i: int) -> Molecule:
@@ -17,22 +18,33 @@ class SmilesDataset:
             return self.mols[i]
 
         # Store and return new molecule
-        new_mol = molecule_from_smiles(self.smiles[i])
+        new_mol = self.load_molecule(i)
         self.mols[i] = new_mol
         return new_mol
 
+    def random_molecule(self) -> Molecule:
+        return self[random.randint(0, len(self) - 1)]
+
+    @abstractmethod
+    def load_molecule(self, i: int) -> Molecule:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def __len__(self):
+        raise NotImplementedError()
+
+
+class SmilesDataset(MoleculeDataset):
+
+    def __init__(self, smiles: Iterable[str]):
+        super().__init__()
+        self.smiles: List[str] = list(smiles)
+
+    def load_molecule(self, i: int) -> Molecule:
+        return molecule_from_smiles(self.smiles[i])
+
     def __len__(self):
         return len(self.smiles)
-
-    def __iter__(self):
-        for i in range(len(self)):
-            yield self[i]
-
-    def get_smiles(self, i: int) -> str:
-        return self.smiles[i]
-
-    def random_molecule(self) -> Union[Molecule]:
-        return self[random.randint(0, len(self.smiles) - 1)]
 
 
 def generate_from_fragments(
@@ -89,3 +101,39 @@ def generate_from_fragments(
             # Add a random fragment
             mol = Molecule.randomly_glue_together(mol, frag, bond_generator)
             fragments += 1
+
+
+def generate_from_sdf(
+        database_path: str,
+        accept: Callable[[Molecule], bool],
+        bond_generator: BondGenerator,
+        min_frag_size: int = 1,
+        max_frag_size: int = None) -> Iterator[Tuple[Molecule, int]]:
+
+    dataset_files = glob.glob(database_path, '*.sdf')
+    print(dataset_files)
+
+    while True:
+
+        mol = None
+        fragments = 0
+"""
+        while True:
+
+            # Get a random fragment from the dataset
+            frag = dataset.random_molecule().random_fragment(min_size=min_frag_size, max_size=max_frag_size)
+
+            if mol is None:
+                mol = frag
+                fragments = 1
+                continue
+
+            # Yield acceptable molecule
+            if accept(mol):
+                yield mol, fragments
+                break
+
+            # Add a random fragment
+            mol = Molecule.randomly_glue_together(mol, frag, bond_generator)
+            fragments += 1
+"""

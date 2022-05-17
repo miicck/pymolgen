@@ -1,4 +1,5 @@
 from pymolgen.molecule import Molecule, BondType
+from typing import List, Tuple
 import networkx
 
 
@@ -54,6 +55,49 @@ def molecule_to_smiles(mol: Molecule) -> str:
     from rdkit import Chem
     return Chem.MolToSmiles(molecule_to_rdkit(mol))
 
+def graph_from_atoms_bonds(atoms: List[str], bonds: List[Tuple[int,int,int]]) -> 'Networkx graph':
+    """
+    Convert list of atoms and bonds to networkx graph
+
+    Parameters
+    ----------
+    atoms
+        list of atoms as strings
+    bonds
+        list of int, int, int with atom1, atom2 and bond order between the two
+
+    Returns
+    -------
+    created graph if successful, otherwise None
+
+    """
+
+    graph = networkx.Graph()
+
+    atom_valences = {
+    'H':1,
+    'C':4,
+    'N':3,
+    'O':2,
+    'S':2,
+    'F':1,
+    'Cl':1,
+    'Br':1
+    }
+
+    for n in range(len(atoms)):
+        atom = atoms[n]
+        total_valence = atom_valences[atom]
+        print(n, atom, total_valence)
+        graph.add_node(n, element=atom, valence=total_valence)
+
+    for bond in bonds:
+        atom1 = bond[0]
+        atom2 = bond[1]
+        order = bond[2]
+        graph.add_edge(atom1, atom2, order=order)
+
+    return graph
 
 def molecule_from_bru(bru: str) -> Molecule:
     """
@@ -66,7 +110,7 @@ def molecule_from_bru(bru: str) -> Molecule:
 
     Returns
     -------
-    created molecule if successful, otherwise None
+    created molecule if successful
     """
 
     brufilelines = bru.split("\n")
@@ -81,34 +125,56 @@ def molecule_from_bru(bru: str) -> Molecule:
             atom1 = int(line.split()[1])
             atom2 = int(line.split()[2])
             order = int(line.split()[3])
-            bonds.append([atom1, atom2, order])
-
-    graph = networkx.Graph()
-
-    atom_valences = {
-        'H': 1,
-        'C': 4,
-        'N': 3,
-        'O': 2,
-        'S': 2,
-        'F': 1,
-        'Cl': 1,
-        'Br': 1
-    }
-
-    for n in range(len(atoms)):
-        atom = atoms[n]
-        total_valence = atom_valences[atom]
-        graph.add_node(n, element=atom, valence=total_valence)
-
-    for bond in bonds:
-        atom1 = bond[0]
-        atom2 = bond[1]
-        order = bond[2]
-        graph.add_edge(atom1, atom2, order=order)
+            bonds.append((atom1, atom2, order))
 
     mol = Molecule()
-    mol.graph = graph
+    mol.graph = graph_from_atoms_bonds(atoms, bonds)
+    
+    return mol
+
+def molecule_from_sdf(sdffilename: str) -> 'Molecule':
+    """
+    Loads this molecule from an SDF format file.
+
+    Parameters
+    ----------
+    sdffilename
+        Name of bru format file
+
+    Returns
+    -------
+    self if successful, otherwise None
+    """
+
+    atoms = []
+    bonds = []
+
+    sdffile = open(sdffilename)
+
+    for line in sdffile:
+        if 'V2000' in line: 
+            natoms = int(line.split()[0])
+            break
+
+    n = 1
+    for line in sdffile:
+        print(line)
+        atom = line.split()[3]
+        atoms.append(atom)
+        if n == natoms: break
+        n += 1
+        
+    for line in sdffile:
+        if 'END' in line: break
+        print(line)
+        atom1 = int(line.split()[0]) - 1
+        atom2 = int(line.split()[1]) - 1
+        order = int(line.split()[2])
+        bonds.append([atom1, atom2, order])
+
+    mol = Molecule()
+    mol.graph = graph_from_atoms_bonds(atoms, bonds)
+
     return mol
 
 

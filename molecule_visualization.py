@@ -1,6 +1,6 @@
 from pymolgen.molecule import Molecule
 from pymolgen.molecule_formats import molecule_to_rdkit
-
+import networkx
 
 def plot_molecule(molecule, timeout: float = None, title="Molecule"):
     """
