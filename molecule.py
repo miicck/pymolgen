@@ -272,6 +272,9 @@ class Molecule:
             p.terminate()
 
     def plot_graph(self):
+        """
+        Plots the underlying networkx graph of the molecule.
+        """
         import matplotlib.pyplot as plt
 
         pos = networkx.spring_layout(self.graph)
