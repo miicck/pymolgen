@@ -7,6 +7,8 @@ d = SmilesDataset(smiles)
 
 for i, mol in enumerate(d):
     try:
+        print(d.get_smiles(i))
         mol.plot(title=d.get_smiles(i))
-    except:
+    except Exception as e:
+        print("Failed: ", d.get_smiles(i), e)
         pass

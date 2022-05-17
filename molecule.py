@@ -8,6 +8,7 @@ from rdkit.Chem import Draw
 import multiprocessing
 from enum import Enum
 from pymolgen.bond_generator import BondGenerator
+import numpy as np
 
 
 class BondType(Enum):
@@ -188,20 +189,24 @@ class Molecule:
         """
         frag = Molecule()
         frag.graph = networkx.Graph(self.graph.subgraph(nodes))
-
-        # Look for broken bonds
-        for i in nodes:
-            for n in self.graph[i]:
-                if n in nodes:
-                    continue
-
-                if not allow_breaking_aromatic:
-                    # Don't allow breaking of aromatic bonds
-                    order = self.graph[i][n]["order"]
-                    if abs(order - round(order)) > 0.1:
-                        return None
-
         return frag
+
+    def is_cyclic(self, i: int) -> bool:
+        """
+        Returns true if the node at the given index is cyclic.
+        Parameters
+        ----------
+        i
+            The index of the node
+
+        Returns
+        -------
+        True if the node is part of a cycle
+        """
+        for basis in networkx.cycle_basis(self.graph):
+            if i in basis:
+                return True
+        return False
 
     def random_fragment(self, min_size: int = 1, max_size: int = None) -> 'Molecule':
         """
@@ -221,33 +226,32 @@ class Molecule:
             A fragment of this molecule, with apropritate
             free valence points along cleaved bonds
         """
-        # Pick the size of the fragment
-        if max_size is None or max_size > self.atom_count - 1:
-            max_size = self.atom_count - 1
-        size = random.randint(min_size, max_size)
 
-        # Pick a random starting location
-        i = random.choice(list(self.graph.nodes))
-        nodes = {i}
+        while True:
 
-        # Add a random neighbouring atom until
-        # the fragment is of the desired size
-        while len(nodes) < size:
+            target_size = random.randint(min_size, max_size or len(self.graph))
 
-            neighbours = set()
-            for n in nodes:
-                neighbours.update(self.graph[n])
-            neighbours -= nodes
+            # Pick a random starting location
+            i = random.choice(list(self.graph.nodes))
+            nodes = {i}
 
-            if len(neighbours) == 0:
-                break
-            nodes.add(random.choice(list(neighbours)))
+            # Add a random neighbouring atom until
+            # the fragment is of the desired size
+            while len(nodes) < target_size:
 
-        frag = self.get_fragment(nodes)
-        if frag is None:
-            # Fragment was not sensible, try again
-            return self.random_fragment(min_size=min_size, max_size=max_size)
-        return frag
+                neighbours = set()
+                for n in nodes:
+                    neighbours.update(self.graph[n])
+                neighbours -= nodes
+
+                if len(neighbours) == 0:
+                    break
+
+                nodes.add(random.choice(list(neighbours)))
+
+            frag = self.get_fragment(nodes)
+            if frag is not None:
+                return frag
 
     def plot(self, timeout: float = None, title="Molecule"):
         """
@@ -266,6 +270,24 @@ class Molecule:
             p.start()
             time.sleep(timeout)
             p.terminate()
+
+    def plot_graph(self):
+        import matplotlib.pyplot as plt
+
+        pos = networkx.spring_layout(self.graph)
+
+        for i, j in self.graph.edges:
+            xs = pos[i][0], pos[j][0]
+            ys = pos[i][1], pos[j][1]
+            plt.plot(xs, ys, color="black")
+            plt.annotate(str(self.graph.edges[i, j]["order"]), (pos[i] + pos[j]) * 0.5)
+
+        for i in self.graph.nodes:
+            label = str(self.graph.nodes[i]["valence"])
+            label += f" [{i}" + ("c]" if self.is_cyclic(i) else "]")
+            plt.annotate(label, pos[i])
+
+        plt.show()
 
     def make_disjoint(self, other: 'Molecule') -> None:
         """
