@@ -8,7 +8,7 @@ from pymolgen.molecule import Molecule
 from pymolgen.generate import SDFDataset
 from pymolgen.bond_generator import RandomBondGenerator
 
-def newmol2(parent_file):
+def newmol(parent_file):
     min_frag_size = 1
     max_frag_size = 50
 
@@ -26,7 +26,98 @@ def newmol2(parent_file):
 
     print(mol.attach_points)
 
-    plot_molecule_graph(mol)
+    sdf_files = glob.glob('/home/pczbf/pymolgen/datasets/sdf/mol*.sdf') 
+
+    sdf_files_abspath = [ os.path.abspath(sdf_file) for sdf_file in sdf_files]
+
+    dataset = SDFDataset(sdf_files_abspath)
+
+    #random.seed(100)
+
+    #generate a random fragment
+    frag = dataset.random_molecule().random_fragment(min_size=min_frag_size, max_size=max_frag_size)
+
+    smi = molecule_to_smiles(frag)
+    mw = '%.1f' %Molecule.molecular_weight(frag)
+    print('frag = ', smi, mw)
+
+    # Add generated random fragment to mol
+    mol = Molecule.randomly_glue_together(mol, frag, RandomBondGenerator()) or mol
+
+    smi = molecule_to_smiles(mol)
+    mw = '%.1f' %Molecule.molecular_weight(mol)
+    print(smi, mw)
+
+    return mol
+
+def is_hydrogen(graph):
+    if len(graph.nodes) != 1:
+        return False
+
+    for i in graph.nodes:
+        return graph.nodes[i]["element"] == "H"
+
+
+def newmol_attachment_point(mol, attachment_point, dataset):
+    min_frag_size = 1
+    max_frag_size = 50
+
+    mw = Molecule.molecular_weight(mol)
+    print(mw)
+
+    mol = mol.remove_atom(attachment_point)
+
+    #plot_molecule_graph(mol)
+    #plot_molecule(mol)
+
+    mw = Molecule.molecular_weight(mol)
+    print(mw)
+
+    print(mol.attach_points)
+
+#random.seed(100)
+
+    #generate a random fragment
+    while True:
+        frag = dataset.random_molecule().random_fragment(min_size=min_frag_size, max_size=max_frag_size)
+        if not is_hydrogen(frag.graph):
+            break
+
+    smi = molecule_to_smiles(frag)
+    mw = '%.1f' %Molecule.molecular_weight(frag)
+    print('frag = ', smi, mw)
+
+    # Add generated random fragment to mol
+    mol = Molecule.randomly_glue_together(mol, frag, RandomBondGenerator()) or mol
+
+    smi = molecule_to_smiles(mol)
+    mw = '%.1f' %Molecule.molecular_weight(mol)
+    print(smi, mw)
+
+    return mol
+
+def newmol_mw(parent_file, max_mw = 500):
+
+    mol = molecule_from_sdf(parent_file)
+
+    parent_mw = Molecule.molecular_weight(mol)
+    print('parent_mw =', parent_mw)
+
+    for n in range(10000):
+        print('n =', n, sep = ' ')
+        newmol2 = newmol(parent_file)
+        mw = Molecule.molecular_weight(newmol2)
+        if mw <= max_mw:
+            plot_molecule(newmol2)
+            return newmol2
+
+    smi = molecule_to_smiles(mol)
+    mw = '%.1f' %Molecule.molecular_weight(mol)
+    print('newmol =', smi, mw)
+
+    return mol
+
+def newmol_mw_attachment_points(parent_file, attachment_points, max_mw = 500):
 
     sdf_files = glob.glob('/home/pczbf/pymolgen/datasets/sdf/mol*.sdf') 
 
@@ -34,59 +125,38 @@ def newmol2(parent_file):
 
     dataset = SDFDataset(sdf_files_abspath)
 
-    random.seed(100)
+    mol = molecule_from_sdf(parent_file)
 
-    #generate a random fragment
-    frag = dataset.random_molecule().random_fragment(min_size=min_frag_size, max_size=max_frag_size)
+    parent_mw = Molecule.molecular_weight(mol)
 
-    smi = molecule_to_smiles(frag)
-    mw = '%.1f' %Molecule.molecular_weight(frag)
-    print(smi, mw)
+    budget_mw = (max_mw - parent_mw) * random.random()
 
-    # Add generated random fragment to mol
-    mol = Molecule.randomly_glue_together(mol, frag, RandomBondGenerator())
+    print('parent_mw =', parent_mw)
 
-    plot_molecule_graph(mol)
+    print('attachment_points =', attachment_points)
 
-    plot_molecule(mol)
+    n = 0
+    for i in attachment_points:
+        print('attachment_point =', i)
+        while True:
+            n += 1
+            if n == 100: 
+                print('MAX LOOP, attachment_points =', attachment_points, 'budget_mw =', budget_mw)
+                break
+            newmol2 = newmol_attachment_point(mol, i, dataset)
+            if Molecule.molecular_weight(newmol2) <= budget_mw + parent_mw:
+                mol = newmol2
+                break
 
     smi = molecule_to_smiles(mol)
     mw = '%.1f' %Molecule.molecular_weight(mol)
-    print(smi, mw)
+    print('newmol =', smi, 'Mw =', mw, 'budget_mw =', budget_mw)
 
-def newmol1():
-    min_frag_size = 1
-    max_frag_size = 50
+    plot_molecule(mol)
 
-    mol = molecule.Molecule()
-
-    mol.load_bru('parent.txt')
-
-    #mol.remove_atom(30)
-
-    print(mol.attach_points)
-
-    smiles = []
-    with open("/home/pczbf/pymolgen/datasets/test_set", "r") as smiles_chembl:
-        for line in smiles_chembl:
-            smiles.append(line)
-
-    dataset = generate.SmilesDataset(smiles)
-
-    #generate a random fragment
-    frag = dataset.random_molecule().random_fragment(min_size=min_frag_size, max_size=max_frag_size)
-
-    networkx.draw(frag)
-    frag.plot()
-
-    print(frag.attach_points)
-
-    # Add generated random fragment to mol
-    mol = Molecule.randomly_glue_together(mol, frag, bond_generator.RandomBondGenerator())
-
-    networkx.draw(mol)
-    mol.plot()
+    return mol
 
 if __name__ == '__main__':
     parent_file = sys.argv[1]
-    newmol2(parent_file)
+    attachment_points = [int(i) for i in sys.argv[2].split()] 
+    newmol_mw_attachment_points(parent_file, attachment_points, max_mw = 500)
