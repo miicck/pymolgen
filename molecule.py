@@ -7,7 +7,6 @@ from enum import Enum
 from pymolgen.bond_generator import BondGenerator
 import numpy as np
 
-
 class BondType(Enum):
     SINGLE = 1
     AROMATIC = 2
@@ -356,6 +355,70 @@ class Molecule:
         # Choose the pair of free valence points to glue together
         a_point = random.choice(molecule_a.attach_points)
         b_point = random.choice(molecule_b.attach_points)
+        a_valence = molecule_a.free_valence(a_point)
+        b_valence = molecule_b.free_valence(b_point)
+
+        # The order of the new bond
+        new_order = bond_generator.generate_and_check(
+            molecule_a.graph.nodes[a_point]["element"],
+            molecule_b.graph.nodes[b_point]["element"],
+            a_valence, b_valence)
+
+        if new_order < 0:
+            return None
+
+        # Build the glued-together molecule
+        mol = Molecule()
+
+        assert a_point in molecule_a.graph.nodes
+        assert b_point in molecule_b.graph.nodes
+        mol.graph = networkx.compose(molecule_b.graph, molecule_a.graph)
+        assert a_point in mol.graph.nodes
+        assert b_point in mol.graph.nodes
+
+        # Create the bond
+        mol.graph.add_edge(a_point, b_point, order=new_order)
+
+        return mol
+
+    @staticmethod
+    def glue_together_attachmentpoint(
+            molecule_a: 'Molecule',
+            molecule_b: 'Molecule',
+            bond_generator: BondGenerator,
+            attachment_point: 'int') -> Optional['Molecule']:
+        """
+        Given two molecules, attempt to glue them together by creating a bond
+        between the attachment point of molecule_a and free valence points of molecule_b. 
+        Returns None if no compatible valence points exist.
+
+        Parameters
+        ----------
+        molecule_a
+            First molecule
+        molecule_b
+            Second molecule
+        attachment_point
+            Attachment point of molecule_a
+        Returns
+        -------
+        None if molecules could not be glued together, otherwise
+        the newly-created, glued-together molecule.
+        """
+
+        if len(molecule_a.attach_points) == 0:
+            return None
+        if len(molecule_b.attach_points) == 0:
+            return None
+
+        # Create a copy of molecule b that does not share node ids with molecule a
+        molecule_b = molecule_b.copy()
+        molecule_b.make_disjoint(molecule_a)
+
+        # Choose the pair of free valence points to glue together
+        a_point = attachment_point
+        b_point = random.choice(molecule_b.attach_points)
+
         a_valence = molecule_a.free_valence(a_point)
         b_valence = molecule_b.free_valence(b_point)
 
