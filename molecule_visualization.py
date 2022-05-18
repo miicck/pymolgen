@@ -38,8 +38,14 @@ def plot_molecule_graph(molecule):
         plt.annotate(str(molecule.graph.edges[i, j]["order"]), (pos[i] + pos[j]) * 0.5)
 
     for i in molecule.graph.nodes:
-        label = str(molecule.graph.nodes[i]["valence"])
+        label = molecule.graph.nodes[i]["element"]
+        label += "-"+str(molecule.graph.nodes[i]["valence"])
         label += f" [{i}" + ("c]" if molecule.is_cyclic(i) else "]")
-        plt.annotate(label, pos[i])
+
+        color="black"
+        if molecule.free_valence(i) > 10e-4:
+            color="red"
+
+        plt.annotate(label, pos[i], color=color)
 
     plt.show()

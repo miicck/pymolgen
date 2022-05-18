@@ -117,6 +117,14 @@ class Molecule:
         """
         return deepcopy(self)
 
+    def set_valence_from_bonds(self):
+        """
+        Sets the valence of each atom according
+        to the total bond order attached to that atom.
+        """
+        for n in self.graph.nodes:
+            self.graph.nodes[n]["valence"] = self.total_order_of_bonds(n)
+
     def total_order_of_bonds(self, i: int) -> float:
         """
         Returns
@@ -258,7 +266,7 @@ class Molecule:
         # Get the list of possible nodes to remove (without breaking the molecule apart)
         nodes = list(n for n in self.graph.nodes if len(self.graph[n]) == 1)
         if element is not None:
-            nodes = [n for n in nodes if self.graph.nodes[n]["element"].upper() == element.upper()]
+            nodes = [n for n in nodes if self.graph.nodes[n]["element"].capitalize() == element.capitalize()]
         if len(nodes) == 0:
             return False
         to_remove = random.choice(nodes)

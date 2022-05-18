@@ -54,19 +54,7 @@ def molecule_to_smiles(mol: Molecule) -> str:
     """
     from rdkit import Chem
     return Chem.MolToSmiles(molecule_to_rdkit(mol))
-
-def atom_valence(atom, bonds):
-    total_valence = 0
     
-    for bond in bonds:
-        atom1 = bond[0]
-        atom2 = bond[1]
-        order = bond[2]
-
-        if atom1 == atom:
-            total_valence += order
-
-    return total_valence
 
 def graph_from_atoms_bonds(atoms: List[str], bonds: List[Tuple[int,int,int]]) -> 'Networkx graph':
     """
@@ -88,15 +76,10 @@ def graph_from_atoms_bonds(atoms: List[str], bonds: List[Tuple[int,int,int]]) ->
     graph = networkx.Graph()
 
     for n in range(len(atoms)):
-        atom = atoms[n]
-        total_valence = atom_valence(n, bonds)
-        graph.add_node(n, element=atom, valence=total_valence)
+        graph.add_node(n, element=atoms[n], valence=0)
 
     for bond in bonds:
-        atom1 = bond[0]
-        atom2 = bond[1]
-        order = bond[2]
-        graph.add_edge(atom1, atom2, order=order)
+        graph.add_edge(bond[0], bond[1], order=bond[2])
 
     return graph
 
@@ -130,7 +113,8 @@ def molecule_from_bru(bru: str) -> Molecule:
 
     mol = Molecule()
     mol.graph = graph_from_atoms_bonds(atoms, bonds)
-    
+    mol.set_valence_from_bonds()
+
     return mol
 
 def molecule_from_sdf(sdffilename: str) -> 'Molecule':
@@ -174,6 +158,7 @@ def molecule_from_sdf(sdffilename: str) -> 'Molecule':
 
     mol = Molecule()
     mol.graph = graph_from_atoms_bonds(atoms, bonds)
+    mol.set_valence_from_bonds()
 
     return mol
 
