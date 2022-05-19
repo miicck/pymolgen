@@ -90,7 +90,7 @@ def newmol_mw_attachment_points(dataset_path, parent_file, remove_hydrogens, out
         #generate a random fragment
         n = 0
         while True:
-            if n == 1000: 
+            if n == 10000: 
                 print('MAX LOOP when attaching to attachment_point =', attachment_point)
                 break
             n += 1
@@ -99,13 +99,12 @@ def newmol_mw_attachment_points(dataset_path, parent_file, remove_hydrogens, out
                 smi = molecule_to_smiles(frag)
                 mw = '%.1f' %Molecule.molecular_weight(frag)
                 mol = Molecule.glue_together_attachmentpoint(mol, frag, RandomBondGenerator(), attachment_point) or mol
-
                 break
 
     n = 0
     while True:
         n += 1
-        if n == 1000: 
+        if n == 10000: 
             print('MAX LOOP, attachment_points =', attachment_points, 'budget_mw =', budget_mw)
             break
             frag = dataset.random_molecule().random_fragment(min_size=min_frag_size, max_size=max_frag_size)
@@ -115,10 +114,13 @@ def newmol_mw_attachment_points(dataset_path, parent_file, remove_hydrogens, out
                 mol = Molecule.randomly_glue_together(mol, frag, RandomBondGenerator()) or mol
             if Molecule.molecular_weight(mol) + len(mol.attach_points) >= parent_mw + budget_mw:    
                 break
+            if len(mol.attach_points) == 0:
+                break
 
     smi = molecule_to_smiles(mol)
-    mw = '%.1f' %Molecule.molecular_weight(mol)
-    print('NEW_CANDIDATE',smi, mw)
+    mw = Molecule.molecular_weight(mol)
+    left_budget = budget_mw + parent_mw - mw
+    print('NEW_CANDIDATE %s %.1f %.1f' %(smi, mw, left_budget))
     molecule_to_sdf(mol, outfile_name)
 
     return mol
