@@ -12,7 +12,7 @@ def plot_molecule(molecule, timeout: float = None, title="Molecule"):
     def plot_on_thread():
         to_plot = molecule.copy()
         to_plot.hydrogenate()  # Helps with rdkit complaining about unkekulized atoms
-        Draw.ShowMol(molecule_to_rdkit(to_plot), size=(1024, 1024), title=title)
+        Draw.ShowMol(molecule_to_rdkit(to_plot), size=(400, 400), title=title)
 
     if timeout is None:
         plot_on_thread()
