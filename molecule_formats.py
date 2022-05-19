@@ -216,7 +216,6 @@ def atoms_bonds_to_sdf(atoms, bonds, sdffilename):
         outfile.write('    0.0000    0.0000    0.0000 {0: <3} 0  0  0  0  0  0  0  0  0  0  0  0\n'.format(atom))
 
     for bond in bonds:
-        print(bond)
         atom1 = bond[0]
         atom2 = bond[1]
         order = bond[2]
