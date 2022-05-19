@@ -2,7 +2,7 @@ import glob
 import networkx
 import sys,os
 import random
-from pymolgen.molecule_formats import molecule_from_sdf, molecule_to_smiles
+from pymolgen.molecule_formats import molecule_from_sdf, molecule_to_smiles, molecule_to_atoms_bonds, molecule_to_sdf
 from pymolgen.molecule_visualization import plot_molecule, plot_molecule_graph
 from pymolgen.molecule import Molecule
 from pymolgen.generate import SDFDataset
@@ -57,7 +57,7 @@ def is_hydrogen(graph):
     for i in graph.nodes:
         return graph.nodes[i]["element"] == "H"
 
-def newmol_mw_attachment_points(dataset_path, parent_file, remove_hydrogens, max_mw = 500):
+def newmol_mw_attachment_points(dataset_path, parent_file, remove_hydrogens, outfile_name, max_mw = 500):
 
     min_frag_size = 1
     max_frag_size = 50
@@ -119,12 +119,13 @@ def newmol_mw_attachment_points(dataset_path, parent_file, remove_hydrogens, max
     smi = molecule_to_smiles(mol)
     mw = '%.1f' %Molecule.molecular_weight(mol)
     print(smi, mw)
-    #plot_molecule(mol)
+    molecule_to_sdf(mol, outfile_name)
 
     return mol
 
 if __name__ == '__main__':
     dataset_path = sys.argv[1]
     parent_file = sys.argv[2]
-    remove_hydrogens = [int(i) for i in sys.argv[3].split()] 
-    newmol_mw_attachment_points(dataset_path, parent_file, remove_hydrogens, max_mw = 500)
+    remove_hydrogens = [int(i) for i in sys.argv[3].split()]
+    outfile_name = sys.argv[4]
+    newmol_mw_attachment_points(dataset_path, parent_file, remove_hydrogens, outfile_name, max_mw = 500)
