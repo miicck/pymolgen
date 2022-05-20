@@ -50,12 +50,12 @@ def newmol(parent_file):
 
     return mol
 
-def is_hydrogen(graph):
-    if len(graph.nodes) != 1:
+def is_hydrogen(molecule):
+    if len(molecule.graph.nodes) != 1:
         return False
 
-    for i in graph.nodes:
-        return graph.nodes[i]["element"] == "H"
+    for i in molecule.graph.nodes:
+        return molecule.graph.nodes[i]["element"] == "H"
 
 def newmol_mw_attachment_points(dataset_path, parent_file, remove_hydrogens, outfile_name, max_mw = 500):
 
@@ -108,7 +108,7 @@ def newmol_mw_attachment_points(dataset_path, parent_file, remove_hydrogens, out
             print('MAX LOOP, attachment_points =', mol.attach_points, 'budget_mw =', budget_mw)
             break
         frag = dataset.random_molecule().random_fragment(min_size=min_frag_size, max_size=max_frag_size)
-        if len(frag.attach_points) > 0 and Molecule.molecular_weight(frag) + Molecule.molecular_weight(mol) + len(frag.attach_points) + len(mol.attach_points) - 2 <= parent_mw + budget_mw:
+        if not is_hydrogen(frag) and len(frag.attach_points) > 0 and Molecule.molecular_weight(frag) + Molecule.molecular_weight(mol) + len(frag.attach_points) + len(mol.attach_points) - 2 <= parent_mw + budget_mw:
             smi = molecule_to_smiles(frag)
             mw = '%.1f' %Molecule.molecular_weight(frag)
             mol = Molecule.randomly_glue_together(mol, frag, RandomBondGenerator()) or mol
