@@ -198,32 +198,32 @@ def molecule_to_atoms_bonds(molecule: Molecule) -> (List, Tuple[int, int, int]):
 
     return atoms, bonds
 
-def molecule_to_sdf(molecule, sdffilename):
+def molecule_to_sdf(molecule):
     atoms, bonds = molecule_to_atoms_bonds(molecule)
-    atoms_bonds_to_sdf(atoms, bonds, sdffilename)
+    lines = atoms_bonds_to_sdf(atoms, bonds)
+    return lines
 
-def atoms_bonds_to_sdf(atoms, bonds, sdffilename):
-    outfile = open(sdffilename, 'w')
-
-    outfile.write('Molecule\n pymolgen\n\n')
+def atoms_bonds_to_sdf(atoms, bonds):
+    lines = []
+    lines.append('Molecule\n pymolgen\n\n')
 
     n_atoms = len(atoms)
     n_bonds = len(bonds)
 
-    outfile.write(' %s %s  0  0  1  0  0  0  0  0999 V2000\n' %(n_atoms, n_bonds))
+    lines.append(' %s %s  0  0  1  0  0  0  0  0999 V2000\n' %(n_atoms, n_bonds))
 
     for atom in atoms:
-        outfile.write('    0.0000    0.0000    0.0000 {0: <3} 0  0  0  0  0  0  0  0  0  0  0  0\n'.format(atom))
+        lines.append('    0.0000    0.0000    0.0000 {0: <3} 0  0  0  0  0  0  0  0  0  0  0  0\n'.format(atom))
 
     for bond in bonds:
         atom1 = bond[0]
         atom2 = bond[1]
         order = bond[2]
-        outfile.write('{0: >3}{1: >3}  {2}  0  0  0  0\n'.format(atom1, atom2, order))
+        lines.append('{0: >3}{1: >3}  {2}  0  0  0  0\n'.format(atom1, atom2, order))
 
-    outfile.write('M  END\n')
+    lines.append('M  END\n')
 
-    outfile.close()
+    return lines
 
 def molecule_to_rdkit(molecule: Molecule) -> 'Chem.RWMol':
     """
