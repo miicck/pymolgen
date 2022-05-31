@@ -7,6 +7,40 @@ from pymolgen.molecule_visualization import plot_molecule, plot_molecule_graph
 from pymolgen.molecule import Molecule
 from pymolgen.generate import SDFDataset
 from pymolgen.bond_generator import RandomBondGenerator
+from auto_docker import PAINS_filter, nonallowed_fragment_tautomers
+
+# Import Openeye Modules
+from openeye import oechem, oeomega, oedocking, oequacpac
+
+# Import RDKit Tools
+from rdkit import Chem
+from rdkit.Chem import AllChem
+
+# Import properties modules
+from properties_pymolgen import oeMolProp, num_atomatic_rings, num_chiral_centres, \
+    num_lipinsky_donors, num_lipinsky_acceptors, molecular_weight, num_rot_bond
+
+# =============================================================================
+# Define Thresholds
+# =============================================================================
+
+#   CHIRAL_THRESHOLD:   Maximum number of Chiral Centers (<= 2)
+CHIRAL_THRESHOLD = 2
+#   PSA_TRESHOLD:       Polar surface area (<= 140)
+PSA_TRESHOLD = 140
+#   PFI_TRESHOLD:       Property Forecast Index (LOGP + # of aromatic rings < 8)
+PFI_TRESHOLD = 8
+#   ROTBOND_THRESHOLD:  Number of rotatable bonds (<= 7)
+ROTBOND_THRESHOLD = 7   
+#   WEIGHT_TRESHOLD:    Maximum MW in Daltons (<= 500)
+WEIGHT_TRESHOLD = 500
+#   H_DON_TRESHOLD:     Maximum number of hydrogen donors (<= 5)
+H_DON_TRESHOLD = 5
+#   H_ACC_TRESHOLD:     Maximum number of hydrogen acceptors (<= 10)
+H_ACC_TRESHOLD = 10
+#   LOGP_TRESHOLD:      Water/Octanol Partition Coefficient (0.5-5.0)
+LOGP_TRESHOLD_UP = 5
+LOGP_TRESHOLD_LOW = 0.5
 
 def newmol(parent_file):
     min_frag_size = 1
@@ -137,16 +171,16 @@ def newmol_mw_attachment_points(dataset_path, parent_file, remove_hydrogens, out
 
     return mol
 
-def newmol_mw_attachment_points_single(dataset, parent_file, remove_hydrogens, max_mw = 500):
+def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, budget_mw):
 
     min_frag_size = 1
     max_frag_size = 50
 
-    mol = molecule_from_sdf(parent_file)
+    mol = parent_mol
 
     parent_mw = Molecule.molecular_weight(mol)
 
-    budget_mw = (max_mw - parent_mw) * random.random()
+    #budget_mw = (max_mw - parent_mw) * random.random()
     
     for i in remove_hydrogens:
         mol = mol.remove_atom(i)
@@ -197,7 +231,58 @@ def newmol_mw_attachment_points_single(dataset, parent_file, remove_hydrogens, m
     left_budget = budget_mw + parent_mw - mw
     print('NEW_CANDIDATE %s %.1f %.1f' %(smi, mw, left_budget))
 
+    oemol = oechem.OEGraphMol()
+    oechem.OESmilesToMol(oemol, smi)
+
+    oechem.OEAddExplicitHydrogens(oemol)
+
+    try:
+        filter_pass = filters(oemol, smi)
+        if filter_pass == False:
+            return None
+    except:
+        return None
+
     return mol
+
+def filters(oemol, smi):
+    #filters:
+    if PAINS_filter(oemol) == False: 
+        print("Failed PAINS_filter", smi)
+        return False
+    if nonallowed_fragment_tautomers(oemol) == False: 
+        print("Failed nonallowed_fragment_tautomers", smi)
+        return False
+
+    ofs = oechem.oemolostream()
+    ofs.SetFormat(oechem.OEFormat_SDF)
+    ofs.open("pepe.sdf")
+    oechem.OEWriteConstMolecule(ofs, oemol)
+
+    n_chiral = num_chiral_centres(oemol)
+    h_don = num_lipinsky_donors(oemol)
+    h_acc = num_lipinsky_acceptors(oemol)
+    n_rot_bonds = num_rot_bond(oemol)
+
+    if n_chiral > 2 \
+            or h_don > H_DON_TRESHOLD or h_acc > H_ACC_TRESHOLD \
+            or n_rot_bonds > ROTBOND_THRESHOLD:
+        print("Failed filters", smi)
+        return False       
+
+    logp, PSA = oeMolProp(oemol)
+    n_aromatic_rings = num_atomatic_rings(smi)
+    PFI = n_aromatic_rings + logp
+
+    if logp > LOGP_TRESHOLD_UP or logp < LOGP_TRESHOLD_LOW \
+            or n_chiral > 2 \
+            or PSA > PSA_TRESHOLD or PFI > PFI_TRESHOLD \
+            or h_don > H_DON_TRESHOLD or h_acc > H_ACC_TRESHOLD \
+            or n_rot_bonds > ROTBOND_THRESHOLD:
+        print("Failed filters", smi)
+        return False
+
+    return True    
 
 def newmol_mw_attachment_points_loop(dataset_path, parent_file, remove_hydrogens, outfile_name, n_mol, max_mw = 500):
 
@@ -207,8 +292,22 @@ def newmol_mw_attachment_points_loop(dataset_path, parent_file, remove_hydrogens
 
     dataset = SDFDataset(sdf_files_abspath)
 
-    for i in range(n_mol):
-        mol = newmol_mw_attachment_points_single(dataset, parent_file, remove_hydrogens, max_mw)
+    with open(outfile_name, "w") as outfile:
+        print("Generating ", outfile_name)
+
+    parent_mol = molecule_from_sdf(parent_file)
+
+    parent_mw = Molecule.molecular_weight(parent_mol)
+
+    budget_mw = (max_mw - parent_mw) * random.random()
+
+    counter = 0
+    while counter < n_mol:
+        mol = newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, budget_mw)
+        if mol is None: continue
+
+        counter += 1
+        budget_mw = (max_mw - parent_mw) * random.random()
 
         lines = molecule_to_sdf(mol)
 
