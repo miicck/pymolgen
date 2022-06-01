@@ -192,7 +192,7 @@ def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, bu
     #random.seed(100)
 
     random.shuffle(attachment_points)
-
+    frag_counter = 0
     for attachment_point in attachment_points:
 
         #generate a random fragment
@@ -202,7 +202,8 @@ def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, bu
                 print('MAX LOOP when attaching to attachment_point =', attachment_point)
                 break
             n += 1
-            frag = dataset.random_molecule().random_fragment(min_size=min_frag_size, max_size=max_frag_size)
+            frag = dataset.random_molecule().random_fragment_keep_cycle(min_size=min_frag_size, max_size=max_frag_size, counter=frag_counter)
+            frag_counter += 1
             if len(frag.attach_points) > 0 and Molecule.molecular_weight(frag) + Molecule.molecular_weight(mol) + len(frag.attach_points) + len(mol.attach_points) - 2 <= parent_mw + budget_mw:
                 smi = molecule_to_smiles(frag)
                 mw = '%.1f' %Molecule.molecular_weight(frag)
@@ -215,7 +216,8 @@ def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, bu
         if n == 100: 
             print('MAX LOOP, attachment_points =', mol.attach_points, 'budget_mw =', budget_mw)
             break
-        frag = dataset.random_molecule().random_fragment(min_size=min_frag_size, max_size=max_frag_size)
+        frag = dataset.random_molecule().random_fragment_keep_cycle(min_size=min_frag_size, max_size=max_frag_size, counter=frag_counter)
+        frag_counter += 1
         if not is_hydrogen(frag) and len(frag.attach_points) > 0 and Molecule.molecular_weight(frag) + Molecule.molecular_weight(mol) + len(frag.attach_points) + len(mol.attach_points) - 2 <= parent_mw + budget_mw:
             smi = molecule_to_smiles(frag)
             mw = '%.1f' %Molecule.molecular_weight(frag)
@@ -229,19 +231,21 @@ def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, bu
     smi = molecule_to_smiles(mol)
     mw = Molecule.molecular_weight(mol)
     left_budget = budget_mw + parent_mw - mw
-    print('NEW_CANDIDATE %s %.1f %.1f' %(smi, mw, left_budget))
 
-    oemol = oechem.OEGraphMol()
-    oechem.OESmilesToMol(oemol, smi)
-
-    oechem.OEAddExplicitHydrogens(oemol)
-
+    #generate openeye molecule and run filters on it
     try:
+        oemol = oechem.OEGraphMol()
+        oechem.OESmilesToMol(oemol, smi)
+
+        oechem.OEAddExplicitHydrogens(oemol)
+
         filter_pass = filters(oemol, smi)
         if filter_pass == False:
             return None
     except:
         return None
+
+    print('NEW_CANDIDATE %s %.1f %.1f' %(smi, mw, left_budget))
 
     return mol
 

@@ -210,6 +210,7 @@ class Molecule:
 
             # Pick a random starting location
             i = random.choice(list(self.graph.nodes))
+            #Fragment nodes
             nodes = {i}
 
             # Add a random neighbouring atom until
@@ -218,7 +219,9 @@ class Molecule:
 
                 neighbours = set()
                 for n in nodes:
+                    #graph[n] is neighbours of a particular node
                     neighbours.update(self.graph[n])
+                #remove current nodes from neighbours
                 neighbours -= nodes
 
                 if len(neighbours) == 0:
@@ -227,6 +230,92 @@ class Molecule:
                 nodes.add(random.choice(list(neighbours)))
 
             frag = self.get_fragment(nodes)
+            if frag is not None:
+                return frag
+
+    def random_fragment_keep_cycle(self, min_size: int = 1, max_size: int = None, counter=0) -> 'Molecule':
+        """
+        Returns a random fragment (sub-molecule) of this molecule.
+        Cleaves bonds and remembers the freed-up valence.
+
+        Parameters
+        ----------
+        min_size
+            The minimum size of the fragment to generate.
+        max_size
+            The maximum size of the fragment to gnerate
+            (will be capped at the size of the molecule - 1).
+        Returns
+        -------
+        fragment
+            A fragment of this molecule, with apropritate
+            free valence points along cleaved bonds
+        """
+        #print("counter = ", counter)
+        #from pymolgen.molecule_visualization import plot_molecule_graph
+        #from pymolgen.molecule_formats import molecule_to_sdf
+        cyclic = False
+        while True:
+
+            target_size = random.randint(min_size, max_size or len(self.graph))
+
+            # Pick a random starting location
+            i = random.choice(list(self.graph.nodes))
+            #Fragment nodes
+            nodes = {i}
+
+            # Add a random neighbouring atom until
+            # the fragment is of the desired size
+            loop_counter = 0
+            while len(nodes) < target_size :
+                if loop_counter == 100: 
+                    #print("Loop counter = 100")
+                    break
+                loop_counter += 1
+                neighbours = set()
+                for n in nodes:
+                    #graph[n] is neighbours of a particular node
+                    neighbours.update(self.graph[n])
+                #remove current nodes from neighbours
+                neighbours -= nodes
+
+                if len(neighbours) == 0:
+                    break
+
+                random_neighbour = random.choice(list(neighbours))
+
+                nodes_to_add = []
+                cyclic = False
+                #add full cycle if any neighbour is within a cycle, weighted by size of cycle
+                if self.is_cyclic(random_neighbour):
+                    cyclic = True
+                    #get list of cycles in the molecule
+                    cycles = networkx.cycle_basis(self.graph)
+                    #loop through cycles and find cycles containing neighbour
+                    neighbour_cycles = []
+                    for cycle in cycles:
+                        if random_neighbour in cycle: neighbour_cycles.append(cycle)
+                    if len(neighbour_cycles) > 0:
+                        #choose cycle at random from neighbour_cycles and add nodes in cycles to neighbours set
+                        #with probability 1 / len(neighbour_cycle)
+                        neighbour_cycle = random.choice(neighbour_cycles)
+                        if random.random() < 1.0 / len(neighbour_cycle) and len(neighbour_cycle) + len(nodes) <= target_size:
+                            nodes_to_add = neighbour_cycle
+                else:
+                    nodes_to_add = [random_neighbour]
+
+                for node in nodes_to_add:
+                    nodes.add(node)
+
+            frag = self.get_fragment(nodes)
+            #if cyclic:
+            #    counter += 1
+            #    lines = molecule_to_sdf(self)
+            #    with open("cyclic-mol-%s.sdf" %counter, 'w') as outfile:
+            #        for line in lines: outfile.write(line)
+            #    lines = molecule_to_sdf(frag)
+            #    with open("cyclic-frag-%s.sdf" %counter, 'w') as outfile:
+            #        for line in lines: outfile.write(line)
             if frag is not None:
                 return frag
 
