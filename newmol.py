@@ -250,7 +250,7 @@ def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, bu
                     break
 
     n = 0
-    while True:
+    while n_rot_bonds < ROTBOND_THRESHOLD:
         n += 1
         if n == 1000:
             smi = molecule_to_smiles(mol)         
@@ -279,10 +279,6 @@ def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, bu
                 break
 
     lines = molecule_to_sdf(mol)
-
-    with open('pepe.sdf', 'w') as outfile:
-        for line in lines:
-            outfile.write(line)
 
     smi = molecule_to_smiles(mol)
     mw = mol.molecular_weight()
