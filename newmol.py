@@ -42,6 +42,34 @@ H_ACC_TRESHOLD = 10
 LOGP_TRESHOLD_UP = 5
 LOGP_TRESHOLD_LOW = 0.5
 
+
+try:
+    from line_profiler import LineProfiler
+
+    def do_profile(follow=[]):
+        def inner(func):
+            def profiled_func(*args, **kwargs):
+                try:
+                    profiler = LineProfiler()
+                    profiler.add_function(func)
+                    for f in follow:
+                        profiler.add_function(f)
+                    profiler.enable_by_count()
+                    return func(*args, **kwargs)
+                finally:
+                    profiler.print_stats()
+            return profiled_func
+        return inner
+
+except ImportError:
+    def do_profile(follow=[]):
+        "Helpful if you accidentally leave in production!"
+        def inner(func):
+            def nothing(*args, **kwargs):
+                return func(*args, **kwargs)
+            return nothing
+        return inner
+
 def newmol(parent_file):
     min_frag_size = 1
     max_frag_size = 50
@@ -231,7 +259,10 @@ def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, bu
         if Molecule.molecular_weight(mol) + len(mol.attach_points) >= parent_mw + budget_mw - 10:    
             break
         if len(mol.attach_points) == 0:
-            mol = remove_hydrogen(mol, protected_atoms)
+            remove_hydrogen_pass, mol = remove_hydrogen(mol, protected_atoms)
+            if remove_hydrogen_pass == False:
+                print("Cannot Generate new attachment point")
+                break
 
     lines = molecule_to_sdf(mol)
 
@@ -250,7 +281,11 @@ def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, bu
 
         oechem.OEAddExplicitHydrogens(oemol)
 
-        filter_pass = filters_additive(oemol, smi) and filters_final(oemol, smi)
+        filter_pass = filters_additive(oemol, smi) 
+        if filter_pass == False:
+            return None
+
+        filter_pass = filters_final(oemol, smi)
         if filter_pass == False:
             return None
     except:
@@ -277,10 +312,12 @@ def remove_hydrogen(mol, protected_atoms):
         if element == 'H' and i not in protected_atoms:
             hydrogens.append(i)
 
-    hydrogen = random.choice(hydrogens)
-    mol = mol.remove_atom(hydrogen)
+    if len(hydrogens) > 0:
+        hydrogen = random.choice(hydrogens)
+        mol = mol.remove_atom(hydrogen)
+        return (True, mol)
 
-    return mol
+    return (False, mol)
 
 def filters_additive(oemol,smi):
     #filters:
@@ -336,6 +373,7 @@ def filters_final(oemol, smi):
 
     return True    
 
+#@do_profile(follow=[newmol_mw_attachment_points_single, Molecule.random_fragment_keep_cycle_max_mass])
 def newmol_mw_attachment_points_loop(dataset_path, parent_file, remove_hydrogens, outfile_name, n_mol, max_mw = 500):
 
     sdf_files = glob.glob('%s/mol*.sdf' %dataset_path) 
@@ -379,4 +417,6 @@ if __name__ == '__main__':
     random.seed(100)
     print("Random = ", random.random())
     
+
+
     newmol_mw_attachment_points_loop(dataset_path, parent_file, remove_hydrogens, outfile_name, n_mol)
