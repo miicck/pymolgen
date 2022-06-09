@@ -354,7 +354,9 @@ def filters_additive_mol(mol):
 
         oechem.OEAddExplicitHydrogens(oemol)
 
-        return filters_additive(oemol, smi) 
+        filters_additive_pass, n_rot_bonds = filters_additive(oemol, smi)
+        print("filters_additive_pass =", filters_additive_pass, "n_rot_bonds = ", n_rot_bonds)
+        return (filters_additive_pass, n_rot_bonds)
 
     except:
         print("filters_additive_mol failed with ", smi)
