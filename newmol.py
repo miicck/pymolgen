@@ -189,8 +189,6 @@ def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, bu
 
     attachment_points = mol.attach_points
 
-    #random.seed(100)
-
     random.shuffle(attachment_points)
     frag_counter = 0
     for attachment_point in attachment_points:
@@ -198,7 +196,7 @@ def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, bu
         #generate a random fragment
         n = 0
         while True:
-            if n == 100: 
+            if n == 1000: 
                 print('MAX LOOP when attaching to attachment_point =', attachment_point)
                 break
             n += 1
@@ -213,7 +211,7 @@ def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, bu
     n = 0
     while True:
         n += 1
-        if n == 100: 
+        if n == 1000: 
             print('MAX LOOP, attachment_points =', mol.attach_points, 'budget_mw =', budget_mw)
             break
         frag = dataset.random_molecule().random_fragment_keep_cycle(min_size=min_frag_size, max_size=max_frag_size, counter=frag_counter)
@@ -327,4 +325,9 @@ if __name__ == '__main__':
     remove_hydrogens = [int(i) for i in sys.argv[3].split()]
     outfile_name = sys.argv[4]
     n_mol = int(sys.argv[5])
+
+    random.seed(100)
+    print("Random = ", random.random())
+    sys.exit("Fix loop stops when len(attach_points) == 0")
+
     newmol_mw_attachment_points_loop(dataset_path, parent_file, remove_hydrogens, outfile_name, n_mol)
