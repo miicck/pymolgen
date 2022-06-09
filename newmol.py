@@ -239,8 +239,10 @@ def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, bu
             if len(frag.attach_points) > 0 and frag.molecular_weight() + mol.molecular_weight() + len(frag.attach_points) + len(mol.attach_points) - 2 <= parent_mw + budget_mw:
                 smi = molecule_to_smiles(frag)
                 mw = '%.1f' %Molecule.molecular_weight(frag)
-                mol = Molecule.glue_together_attachmentpoint(mol, frag, RandomBondGenerator(), attachment_point) or mol
-                break
+                newmol = Molecule.glue_together_attachmentpoint(mol, frag, RandomBondGenerator(), attachment_point) or mol
+                if filters_additive_mol(newmol):
+                    mol = newmol
+                    break
 
     n = 0
     while True:
@@ -254,7 +256,9 @@ def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, bu
         if not is_hydrogen(frag) and len(frag.attach_points) > 0 and frag.molecular_weight() + mol.molecular_weight() + len(frag.attach_points) + len(mol.attach_points) - 2 <= parent_mw + budget_mw:
             smi = molecule_to_smiles(frag)
             mw = '%.1f' %frag.molecular_weight()
-            mol = Molecule.randomly_glue_together(mol, frag, RandomBondGenerator()) or mol
+            newmol = Molecule.randomly_glue_together(mol, frag, RandomBondGenerator()) or mol
+            if filters_additive_mol(newmol):
+                mol = newmol
         #break if already at the budget minus 10 (minus 10 because there are no non-hydrogen fragments with mass < 10)
         if Molecule.molecular_weight(mol) + len(mol.attach_points) >= parent_mw + budget_mw - 10:    
             break
