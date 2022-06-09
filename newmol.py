@@ -386,8 +386,9 @@ def filters_final_mol(mol):
 
         return True
 
-    except:
-        print("filters_additive_mol failed with ", smi)
+    except Exception as e: 
+        print("filters_final_mol failed with ", smi)
+        print(e)
         return False
 
 #@do_profile(follow=[newmol_mw_attachment_points_single, Molecule.random_fragment_keep_cycle_max_mass])
