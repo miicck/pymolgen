@@ -242,7 +242,7 @@ def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, bu
             if len(frag.attach_points) > 0 and frag.molecular_weight() + mol.molecular_weight() + len(frag.attach_points) + len(mol.attach_points) - 2 <= parent_mw + budget_mw:
                 smi = molecule_to_smiles(frag)
                 mw = '%.1f' %Molecule.molecular_weight(frag)
-                print("budget = %.1f" %current_budget, "frag1 = ", smi)
+                #print("budget = %.1f" %current_budget, "frag1 = ", smi)
                 newmol = Molecule.glue_together_attachmentpoint(mol, frag, RandomBondGenerator(), attachment_point) or mol
                 filters_additive_pass, n_rot_bonds = filters_additive_mol(newmol)
                 if filters_additive_pass:
@@ -262,7 +262,7 @@ def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, bu
         if not is_hydrogen(frag) and len(frag.attach_points) > 0 and frag.molecular_weight() + mol.molecular_weight() + len(frag.attach_points) + len(mol.attach_points) - 2 <= parent_mw + budget_mw:
             smi = molecule_to_smiles(frag)
             mw = '%.1f' %frag.molecular_weight()
-            print("budget = %.1f" %current_budget, "frag2 = ", smi)
+            #print("budget = %.1f" %current_budget, "frag2 = ", smi)
             newmol = Molecule.randomly_glue_together(mol, frag, RandomBondGenerator()) or mol
             filters_additive_pass, n_rot_bonds = filters_additive_mol(newmol)
             if filters_additive_pass:
@@ -323,19 +323,19 @@ def filters_additive(oemol,smi):
     n_rot_bonds = num_rot_bond(oemol)
 
     if n_rot_bonds > ROTBOND_THRESHOLD:
-        print("Failed n_rot_bonds filter", smi)
+        #print("Failed n_rot_bonds filter", smi)
         return (False, n_rot_bonds)
 
     if n_chiral > 2:
-        print("Failed n_chiral filter", smi)
+        #print("Failed n_chiral filter", smi)
         return (False, n_rot_bonds)
 
     if h_don > H_DON_TRESHOLD:
-        print("Failed h_don filter", smi)
+        #print("Failed h_don filter", smi)
         return (False, n_rot_bonds)
 
     if h_acc > H_ACC_TRESHOLD:
-        print("Failed h_acc filter", smi)
+        #print("Failed h_acc filter", smi)
         return (False, n_rot_bonds)
 
     return (True, n_rot_bonds)
@@ -351,7 +351,7 @@ def filters_additive_mol(mol):
         oechem.OEAddExplicitHydrogens(oemol)
 
         filters_additive_pass, n_rot_bonds = filters_additive(oemol, smi)
-        print("filters_additive_pass =", filters_additive_pass, "n_rot_bonds = ", n_rot_bonds)
+        #print("filters_additive_pass =", filters_additive_pass, "n_rot_bonds = ", n_rot_bonds)
         return (filters_additive_pass, n_rot_bonds)
 
     except:
