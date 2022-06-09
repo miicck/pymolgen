@@ -376,12 +376,12 @@ def filters_final_mol(mol):
 
         oechem.OEAddExplicitHydrogens(oemol)
 
-        filters_additive = filters_additive(oemol, smi)
-        if filters_additive == False:
+        filters_additive_pass = filters_additive(oemol, smi)
+        if filters_additive_pass == False:
             return False
 
-        filters_final = filters_final(oemol, smi) 
-        if filters_final == False:
+        filters_final_pass = filters_final(oemol, smi) 
+        if filters_final_pass == False:
             return False
 
         return True
