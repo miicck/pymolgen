@@ -224,10 +224,13 @@ def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, bu
 
     random.shuffle(attachment_points)
     frag_counter = 0
+    n_rot_bonds = 0
     for attachment_point in attachment_points:
 
         #generate a random fragment
         n = 0
+        if n_rot_bonds == ROTBOND_THRESHOLD:
+            break
         while True:
             if n == 1000: 
                 print('MAX LOOP when attaching to attachment_point =', attachment_point)
@@ -241,7 +244,8 @@ def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, bu
                 mw = '%.1f' %Molecule.molecular_weight(frag)
                 print("budget = %.1f" %current_budget, "frag1 = ", smi)
                 newmol = Molecule.glue_together_attachmentpoint(mol, frag, RandomBondGenerator(), attachment_point) or mol
-                if filters_additive_mol(newmol):
+                filters_additive_pass, n_rot_bonds = filters_additive_mol(newmol)
+                if filters_additive_pass:
                     mol = newmol
                     break
 
@@ -260,8 +264,11 @@ def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, bu
             mw = '%.1f' %frag.molecular_weight()
             print("budget = %.1f" %current_budget, "frag2 = ", smi)
             newmol = Molecule.randomly_glue_together(mol, frag, RandomBondGenerator()) or mol
-            if filters_additive_mol(newmol):
+            filters_additive_pass, n_rot_bonds = filters_additive_mol(newmol)
+            if filters_additive_pass:
                 mol = newmol
+                if n_rot_bonds == ROTBOND_THRESHOLD:
+                    break
         #break if already at the budget minus 10 (minus 10 because there are no non-hydrogen fragments with mass < 10)
         if Molecule.molecular_weight(mol) + len(mol.attach_points) >= parent_mw + budget_mw - 10:    
             break
@@ -319,23 +326,23 @@ def filters_additive(oemol,smi):
     h_acc = num_lipinsky_acceptors(oemol)
     n_rot_bonds = num_rot_bond(oemol)
 
+    if n_rot_bonds > ROTBOND_THRESHOLD:
+        print("Failed n_rot_bonds filter", smi)
+        return (False, n_rot_bonds)
+
     if n_chiral > 2:
         print("Failed n_chiral filter", smi)
-        return False
+        return (False, n_rot_bonds)
 
     if h_don > H_DON_TRESHOLD:
         print("Failed h_don filter", smi)
-        return False
+        return (False, n_rot_bonds)
 
     if h_acc > H_ACC_TRESHOLD:
         print("Failed h_acc filter", smi)
-        return False
+        return (False, n_rot_bonds)
 
-    if n_rot_bonds > ROTBOND_THRESHOLD:
-        print("Failed n_rot_bonds filter", smi)
-        return False   
-
-    return True
+    return (True, n_rot_bonds)
 
 def filters_additive_mol(mol):
     smi = molecule_to_smiles(mol)
@@ -351,7 +358,7 @@ def filters_additive_mol(mol):
 
     except:
         print("filters_additive_mol failed with ", smi)
-        return False
+        return (False, 0)
 
 def filters_final(oemol, smi):
 
@@ -383,7 +390,7 @@ def filters_final_mol(mol):
 
         oechem.OEAddExplicitHydrogens(oemol)
 
-        filters_additive_pass = filters_additive(oemol, smi)
+        filters_additive_pass, n_not_bonds = filters_additive(oemol, smi)
         if filters_additive_pass == False:
             return False
 
