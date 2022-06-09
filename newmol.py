@@ -274,27 +274,9 @@ def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, bu
     mw = mol.molecular_weight()
     left_budget = budget_mw + parent_mw - mw
 
-    #generate openeye molecule and run filters on it
-    try:
-        oemol = oechem.OEGraphMol()
-        oechem.OESmilesToMol(oemol, smi)
-
-        oechem.OEAddExplicitHydrogens(oemol)
-
-        filter_pass = filters_additive(oemol, smi) 
-        if filter_pass == False:
-            return None
-
-        filter_pass = filters_final(oemol, smi)
-        if filter_pass == False:
-            return None
-    except:
+    filter_pass = filters_final_mol(mol)
+    if filter_pass == False:
         return None
-
-    #for i in mol.graph:
-    #    element = mol.graph.nodes[i]['element']
-    #    print(i, element, sep=' ')
-    #print()
 
     print('NEW_CANDIDATE %s %.1f %.1f' %(smi, mw, left_budget))
 
@@ -325,11 +307,6 @@ def filters_additive(oemol,smi):
         print("Failed PAINS_filter", smi)
         return False
 
-    #ofs = oechem.oemolostream()
-    #ofs.SetFormat(oechem.OEFormat_SDF)
-    #ofs.open("pepe.sdf")
-    #oechem.OEWriteConstMolecule(ofs, oemol)
-
     n_chiral = num_chiral_centres(oemol)
     h_don = num_lipinsky_donors(oemol)
     h_acc = num_lipinsky_acceptors(oemol)
@@ -353,6 +330,21 @@ def filters_additive(oemol,smi):
 
     return True
 
+def filters_additive_mol(mol):
+    smi = molecule_to_smiles(mol)
+
+    #generate openeye molecule and run filters on it
+    try:
+        oemol = oechem.OEGraphMol()
+        oechem.OESmilesToMol(oemol, smi)
+
+        oechem.OEAddExplicitHydrogens(oemol)
+
+        return filters_additive(oemol, smi) 
+
+    except:
+        return False
+
 def filters_final(oemol, smi):
 
     logp, PSA = oeMolProp(oemol)
@@ -372,6 +364,29 @@ def filters_final(oemol, smi):
         return False
 
     return True    
+
+def filters_final_mol(mol):
+    smi = molecule_to_smiles(mol)
+
+    #generate openeye molecule and run filters on it
+    try:
+        oemol = oechem.OEGraphMol()
+        oechem.OESmilesToMol(oemol, smi)
+
+        oechem.OEAddExplicitHydrogens(oemol)
+
+        filters_additive = filters_additive(oemol, smi)
+        if filters_additive == False:
+            return False
+
+        filters_final = filters_final(oemol, smi) 
+        if filters_final == False:
+            return False
+
+        return True
+
+    except:
+        return False
 
 #@do_profile(follow=[newmol_mw_attachment_points_single, Molecule.random_fragment_keep_cycle_max_mass])
 def newmol_mw_attachment_points_loop(dataset_path, parent_file, remove_hydrogens, outfile_name, n_mol, max_mw = 500):
