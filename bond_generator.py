@@ -36,7 +36,10 @@ class BondGenerator(ABC):
 
     @staticmethod
     def max_possible_bond_order(free_valence_from: float, free_valence_to: float) -> int:
-        max_order = min(free_valence_from, free_valence_to)
+        """
+        gets the maximum bond order up to order 3 (maximum triple bond)
+        """
+        max_order = min(free_valence_from, free_valence_to,3)
         diff = abs(max_order - round(max_order))
         if diff > 10e-3:
             raise FractionalOrderException

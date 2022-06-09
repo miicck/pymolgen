@@ -185,6 +185,11 @@ def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, bu
     for i in remove_hydrogens:
         mol = mol.remove_atom(i)
 
+    protected_atoms = []
+
+    for i in mol.graph:
+        protected_atoms.append(i)
+
     mw = Molecule.molecular_weight(mol)
 
     attachment_points = mol.attach_points
@@ -200,9 +205,10 @@ def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, bu
                 print('MAX LOOP when attaching to attachment_point =', attachment_point)
                 break
             n += 1
-            frag = dataset.random_molecule().random_fragment_keep_cycle(min_size=min_frag_size, max_size=max_frag_size, counter=frag_counter)
+            current_budget = parent_mw + budget_mw - Molecule.molecular_weight(mol) - len(mol.attach_points)
+            frag = dataset.random_molecule().random_fragment_keep_cycle_max_mass(min_mass=1.0, max_mass=current_budget, counter=frag_counter)
             frag_counter += 1
-            if len(frag.attach_points) > 0 and Molecule.molecular_weight(frag) + Molecule.molecular_weight(mol) + len(frag.attach_points) + len(mol.attach_points) - 2 <= parent_mw + budget_mw:
+            if len(frag.attach_points) > 0 and frag.molecular_weight() + mol.molecular_weight() + len(frag.attach_points) + len(mol.attach_points) - 2 <= parent_mw + budget_mw:
                 smi = molecule_to_smiles(frag)
                 mw = '%.1f' %Molecule.molecular_weight(frag)
                 mol = Molecule.glue_together_attachmentpoint(mol, frag, RandomBondGenerator(), attachment_point) or mol
@@ -211,23 +217,30 @@ def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, bu
     n = 0
     while True:
         n += 1
-        if n == 1000: 
-            print('MAX LOOP, attachment_points =', mol.attach_points, 'budget_mw =', budget_mw)
+        if n == 1000:
+            smi = molecule_to_smiles(mol)         
+            print('MAX LOOP, attachment_points =', mol.attach_points, 'budget_mw =', budget_mw, smi)
             break
-        frag = dataset.random_molecule().random_fragment_keep_cycle(min_size=min_frag_size, max_size=max_frag_size, counter=frag_counter)
+        frag = dataset.random_molecule().random_fragment_keep_cycle_max_mass(min_mass=1.0, max_mass=current_budget, counter=frag_counter)
         frag_counter += 1
-        if not is_hydrogen(frag) and len(frag.attach_points) > 0 and Molecule.molecular_weight(frag) + Molecule.molecular_weight(mol) + len(frag.attach_points) + len(mol.attach_points) - 2 <= parent_mw + budget_mw:
+        if not is_hydrogen(frag) and len(frag.attach_points) > 0 and frag.molecular_weight() + mol.molecular_weight() + len(frag.attach_points) + len(mol.attach_points) - 2 <= parent_mw + budget_mw:
             smi = molecule_to_smiles(frag)
-            mw = '%.1f' %Molecule.molecular_weight(frag)
+            mw = '%.1f' %frag.molecular_weight()
             mol = Molecule.randomly_glue_together(mol, frag, RandomBondGenerator()) or mol
         #break if already at the budget minus 10 (minus 10 because there are no non-hydrogen fragments with mass < 10)
         if Molecule.molecular_weight(mol) + len(mol.attach_points) >= parent_mw + budget_mw - 10:    
             break
         if len(mol.attach_points) == 0:
-            break
+            mol = remove_hydrogen(mol, protected_atoms)
+
+    lines = molecule_to_sdf(mol)
+
+    with open('pepe.sdf', 'w') as outfile:
+        for line in lines:
+            outfile.write(line)
 
     smi = molecule_to_smiles(mol)
-    mw = Molecule.molecular_weight(mol)
+    mw = mol.molecular_weight()
     left_budget = budget_mw + parent_mw - mw
 
     #generate openeye molecule and run filters on it
@@ -237,51 +250,88 @@ def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, bu
 
         oechem.OEAddExplicitHydrogens(oemol)
 
-        filter_pass = filters(oemol, smi)
+        filter_pass = filters_additive(oemol, smi) and filters_final(oemol, smi)
         if filter_pass == False:
             return None
     except:
         return None
 
+    #for i in mol.graph:
+    #    element = mol.graph.nodes[i]['element']
+    #    print(i, element, sep=' ')
+    #print()
+
     print('NEW_CANDIDATE %s %.1f %.1f' %(smi, mw, left_budget))
 
     return mol
 
-def filters(oemol, smi):
+def remove_hydrogen(mol, protected_atoms):
+    """
+    Removes one hydrogen from molecule to create new attachment point at random
+    without removing from protected atoms (original hydrogens in parent structure)
+    """
+
+    hydrogens = []
+    for i in mol.graph:
+        element = mol.graph.nodes[i]['element']
+        if element == 'H' and i not in protected_atoms:
+            hydrogens.append(i)
+
+    hydrogen = random.choice(hydrogens)
+    mol = mol.remove_atom(hydrogen)
+
+    return mol
+
+def filters_additive(oemol,smi):
     #filters:
     if PAINS_filter(oemol) == False: 
         print("Failed PAINS_filter", smi)
         return False
-    if nonallowed_fragment_tautomers(oemol) == False: 
-        print("Failed nonallowed_fragment_tautomers", smi)
-        return False
 
-    ofs = oechem.oemolostream()
-    ofs.SetFormat(oechem.OEFormat_SDF)
-    ofs.open("pepe.sdf")
-    oechem.OEWriteConstMolecule(ofs, oemol)
+    #ofs = oechem.oemolostream()
+    #ofs.SetFormat(oechem.OEFormat_SDF)
+    #ofs.open("pepe.sdf")
+    #oechem.OEWriteConstMolecule(ofs, oemol)
 
     n_chiral = num_chiral_centres(oemol)
     h_don = num_lipinsky_donors(oemol)
     h_acc = num_lipinsky_acceptors(oemol)
     n_rot_bonds = num_rot_bond(oemol)
 
-    if n_chiral > 2 \
-            or h_don > H_DON_TRESHOLD or h_acc > H_ACC_TRESHOLD \
-            or n_rot_bonds > ROTBOND_THRESHOLD:
-        print("Failed filters", smi)
-        return False       
+    if n_chiral > 2:
+        print("Failed n_chiral filter", smi)
+        return False
+
+    if h_don > H_DON_TRESHOLD:
+        print("Failed h_don filter", smi)
+        return False
+
+    if h_acc > H_ACC_TRESHOLD:
+        print("Failed h_acc filter", smi)
+        return False
+
+    if n_rot_bonds > ROTBOND_THRESHOLD:
+        print("Failed n_rot_bonds filter", smi)
+        return False   
+
+    return True
+
+def filters_final(oemol, smi):
 
     logp, PSA = oeMolProp(oemol)
     n_aromatic_rings = num_atomatic_rings(smi)
     PFI = n_aromatic_rings + logp
 
-    if logp > LOGP_TRESHOLD_UP or logp < LOGP_TRESHOLD_LOW \
-            or n_chiral > 2 \
-            or PSA > PSA_TRESHOLD or PFI > PFI_TRESHOLD \
-            or h_don > H_DON_TRESHOLD or h_acc > H_ACC_TRESHOLD \
-            or n_rot_bonds > ROTBOND_THRESHOLD:
-        print("Failed filters", smi)
+    if logp > LOGP_TRESHOLD_UP or logp < LOGP_TRESHOLD_LOW:
+        print("Failed logP filter", smi)
+        return False
+
+    if PSA > PSA_TRESHOLD:
+        print("Failed PSA filter", smi)
+        return False
+
+    if PFI > PFI_TRESHOLD:
+        print("Failed PFI filter", smi)
         return False
 
     return True    
@@ -328,6 +378,5 @@ if __name__ == '__main__':
 
     random.seed(100)
     print("Random = ", random.random())
-    sys.exit("Fix loop stops when len(attach_points) == 0")
-
+    
     newmol_mw_attachment_points_loop(dataset_path, parent_file, remove_hydrogens, outfile_name, n_mol)
