@@ -61,6 +61,18 @@ class SDFDataset(MoleculeDataset):
     def __len__(self):
         return len(self.sdf_file_abspaths)
 
+class SDFDatasetFile(MoleculeDataset):
+
+    def __init__(self, sdf_file_abspaths: Iterable[str]):
+        super().__init__()
+        self.sdf_file_abspaths: List[str] = list(sdf_file_abspaths)
+
+    def load_molecule(self, i: int) -> Molecule:
+        return molecule_from_sdf(self.sdf_file_abspaths[i])
+
+    def __len__(self):
+        return len(self.sdf_file_abspaths)
+
 def generate_from_molecules(
         dataset: Iterable['Molecule'],
         accept: Callable[[Molecule], bool],
