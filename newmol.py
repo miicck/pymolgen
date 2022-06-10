@@ -12,6 +12,13 @@ from pymolgen.bond_generator import RandomBondGenerator
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
+from openeye import oechem
+
+from pymolgen.properties_pymolgen import oeMolProp, num_atomatic_rings, num_chiral_centres, \
+            num_lipinsky_donors, num_lipinsky_acceptors, molecular_weight, num_rot_bond
+
+from auto_docker import PAINS_filter
+
 # =============================================================================
 # Define Thresholds
 # =============================================================================
@@ -291,42 +298,34 @@ def remove_hydrogen(mol, protected_atoms):
 
 
 def filters_additive(oemol, smi):
-    try:
-        from auto_docker import PAINS_filter
-    except ImportError:
-        PAINS_filter = lambda x: True
 
-    try:
-        from properties_pymolgen import oeMolProp, num_atomatic_rings, num_chiral_centres, \
-            num_lipinsky_donors, num_lipinsky_acceptors, molecular_weight, num_rot_bond
-    except ImportError:
-        return True, 0
-
-    # filters:
-    if PAINS_filter(oemol) == False:
-        print("Failed PAINS_filter", smi)
-        return False
-
-    n_chiral = num_chiral_centres(oemol)
-    h_don = num_lipinsky_donors(oemol)
-    h_acc = num_lipinsky_acceptors(oemol)
     n_rot_bonds = num_rot_bond(oemol)
 
     if n_rot_bonds > ROTBOND_THRESHOLD:
         # print("Failed n_rot_bonds filter", smi)
         return (False, n_rot_bonds)
 
+    n_chiral = num_chiral_centres(oemol)
+
     if n_chiral > 2:
         # print("Failed n_chiral filter", smi)
         return (False, n_rot_bonds)
+
+    h_don = num_lipinsky_donors(oemol)
 
     if h_don > H_DON_TRESHOLD:
         # print("Failed h_don filter", smi)
         return (False, n_rot_bonds)
 
+    h_acc = num_lipinsky_acceptors(oemol)
+
     if h_acc > H_ACC_TRESHOLD:
         # print("Failed h_acc filter", smi)
         return (False, n_rot_bonds)
+
+    if PAINS_filter(oemol) == False:
+        print("Failed PAINS_filter", smi)
+        return False
 
     return (True, n_rot_bonds)
 
@@ -349,11 +348,6 @@ def filters_additive_mol(mol):
         The number of rotatatable bonds in the molecule (if pass)
     """
 
-    try:
-        from openeye import oechem
-    except ImportError:
-        return (True, 0)
-
     smi = molecule_to_smiles(mol)
 
     # generate openeye molecule and run filters on it
@@ -373,15 +367,8 @@ def filters_additive_mol(mol):
 
 
 def filters_final(oemol, smi):
-    try:
-        from properties_pymolgen import oeMolProp, num_atomatic_rings, num_chiral_centres, \
-            num_lipinsky_donors, num_lipinsky_acceptors, molecular_weight, num_rot_bond
-    except:
-        return True
 
     logp, PSA = oeMolProp(oemol)
-    n_aromatic_rings = num_atomatic_rings(smi)
-    PFI = n_aromatic_rings + logp
 
     if logp > LOGP_TRESHOLD_UP or logp < LOGP_TRESHOLD_LOW:
         print("Failed logP filter", smi)
@@ -391,6 +378,9 @@ def filters_final(oemol, smi):
         print("Failed PSA filter", smi)
         return False
 
+    n_aromatic_rings = num_atomatic_rings(smi)
+    PFI = n_aromatic_rings + logp
+
     if PFI > PFI_TRESHOLD:
         print("Failed PFI filter", smi)
         return False
@@ -399,10 +389,6 @@ def filters_final(oemol, smi):
 
 
 def filters_final_mol(mol):
-    try:
-        from openeye import oechem
-    except ImportError:
-        return (True, 0)
 
     smi = molecule_to_smiles(mol)
 
