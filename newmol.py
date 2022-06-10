@@ -15,7 +15,7 @@ from rdkit.Chem import AllChem
 from openeye import oechem
 
 from pymolgen.properties_pymolgen import oeMolProp, num_atomatic_rings, num_chiral_centres, \
-            num_lipinsky_donors, num_lipinsky_acceptors, molecular_weight, num_rot_bond
+            num_lipinsky_donors, num_lipinsky_acceptors, molecular_weight, num_rot_bond, pains_filter, gen_pains_database
 
 from auto_docker import PAINS_filter
 
@@ -176,7 +176,7 @@ def newmol_mw_attachment_points(dataset_path, parent_file, remove_hydrogens, out
     return mol
 
 
-def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, budget_mw):
+def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, budget_mw, pains_database):
     min_frag_size = 1
     max_frag_size = 50
 
@@ -379,6 +379,7 @@ def filters_final(oemol, smi):
         return False
 
     n_aromatic_rings = num_atomatic_rings(smi)
+
     PFI = n_aromatic_rings + logp
 
     if PFI > PFI_TRESHOLD:
@@ -434,9 +435,14 @@ def newmol_mw_attachment_points_loop(dataset_path, parent_file, remove_hydrogens
     parent_mw = Molecule.molecular_weight(parent_mol)
     budget_mw = (max_mw - parent_mw) * random.random()
 
+    try:
+        pains_database = gen_pains_database()
+    except:
+        raise Exception("Could not generate pains database")
+
     counter = 0
     while counter < n_mol:
-        mol = newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, budget_mw)
+        mol = newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, budget_mw, pains_database)
         if mol is None: continue
 
         counter += 1

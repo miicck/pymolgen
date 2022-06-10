@@ -1,18 +1,15 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Jul  1 13:07:00 2021
-
-@author: alexehaywood
-"""
+import sys,os
 
 # Import Openeye Modules
-import openeye.oechem as oe
+from openeye import oechem
 from openeye import oemolprop as mp
 
 # Import RDKit Tools
 from rdkit import Chem
 from rdkit.Chem import rdMolDescriptors
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
 
 # Are any H atoms attached to the atom?
 def has_hydrogen(atom):
@@ -26,9 +23,9 @@ def has_hydrogen(atom):
     return False
 
 # Define Lipinski Acceptor
-class IsLipinskiAcceptor(oe.OEUnaryAtomPred):
+class IsLipinskiAcceptor(oechem.OEUnaryAtomPred):
     def __call__(self, atom):
-        if atom.GetAtomicNum() in [oe.OEElemNo_O, oe.OEElemNo_N]:
+        if atom.GetAtomicNum() in [oechem.OEElemNo_O, oechem.OEElemNo_N]:
 
             return True
 
@@ -37,14 +34,14 @@ class IsLipinskiAcceptor(oe.OEUnaryAtomPred):
 # Count the number of Hydrogen-Bond Acceptors 
 def num_lipinsky_acceptors(mol):
 
-    num_acc  =  oe.OECount(mol, IsLipinskiAcceptor())
+    num_acc  =  oechem.OECount(mol, IsLipinskiAcceptor())
 
     return num_acc
 
 # Define Lipinsky Donor 
-class IsLipinskiDonor(oe.OEUnaryAtomPred):
+class IsLipinskiDonor(oechem.OEUnaryAtomPred):
     def __call__(self, atom):
-        if atom.GetAtomicNum() not in [oe.OEElemNo_O, oe.OEElemNo_N]:
+        if atom.GetAtomicNum() not in [oechem.OEElemNo_O, oechem.OEElemNo_N]:
 
             return False
 
@@ -53,7 +50,7 @@ class IsLipinskiDonor(oe.OEUnaryAtomPred):
 # Count the number of Donors 
 def num_lipinsky_donors(mol):
 
-    num_don  =  oe.OECount(mol, IsLipinskiDonor())
+    num_don  =  oechem.OECount(mol, IsLipinskiDonor())
 
     return num_don
 
@@ -67,50 +64,50 @@ def oeMolProp(mol):
 # Count the number of N atoms
 def num_nitrogen_atom(mol_file):
 
-    oe_in_file = oe.oemolistream()
+    oe_in_file = oechem.oemolistream()
     oe_in_file.open(mol_file)
     mols = oe_in_file.GetOEMols()
-    num_nitrogen  =  [oe.OECount(mol, oe.OEIsNitrogen())  for mol in mols]
+    num_nitrogen  =  [oechem.OECount(mol, oechem.OEIsNitrogen())  for mol in mols]
 
     return num_nitrogen[0]
 
 # Count the number of O atoms
 def num_oxygen_atom(mol_file):
 
-    oe_in_file = oe.oemolistream()
+    oe_in_file = oechem.oemolistream()
     oe_in_file.open(mol_file)
     mols = oe_in_file.GetOEMols()
-    num_oxygen  =  [oe.OECount(mol, oe.OEIsOxygen())  for mol in mols]
+    num_oxygen  =  [oechem.OECount(mol, oechem.OEIsOxygen())  for mol in mols]
 
     return num_oxygen[0]
 
 # Count the number of S atoms
 def num_sulfur_atom(mol_file):
 
-    oe_in_file = oe.oemolistream()
+    oe_in_file = oechem.oemolistream()
     oe_in_file.open(mol_file)
     mols = oe_in_file.GetOEMols()
-    num_sulfur  =  [oe.OECount(mol, oe.OEIsSulfur())  for mol in mols]
+    num_sulfur  =  [oechem.OECount(mol, oechem.OEIsSulfur())  for mol in mols]
 
     return num_sulfur[0]
 
 # Count the number of C atoms
 def num_carbon_atom(mol_file):
 
-    oe_in_file = oe.oemolistream()
+    oe_in_file = oechem.oemolistream()
     oe_in_file.open(mol_file)
     mols = oe_in_file.GetOEMols()
-    num_carbon  =  [oe.OECount(mol, oe.OEIsCarbon())  for mol in mols]
+    num_carbon  =  [oechem.OECount(mol, oechem.OEIsCarbon())  for mol in mols]
 
     return num_carbon[0]
 
 # DEPRECATED: Count the number of atomatic systems 
 def num_aromatic_ring_systems(mol_file):
 
-    oe_in_file = oe.oemolistream()
+    oe_in_file = oechem.oemolistream()
     oe_in_file.open(mol_file)
     mols = oe_in_file.GetOEMols()
-    nraromsystems  =  [oe.OEDetermineAromaticRingSystems(mol)  for mol in mols]
+    nraromsystems  =  [oechem.OEDetermineAromaticRingSystems(mol)  for mol in mols]
     
     return nraromsystems[0]
 
@@ -130,17 +127,17 @@ def num_rot_bond(mol):
 # Count the number of chiral centers 
 def num_chiral_centres(mol):
     
-    n_chiral = oe.OECount(mol, oe.OEIsChiralAtom())
+    n_chiral = oechem.OECount(mol, oechem.OEIsChiralAtom())
     
     return n_chiral
 
 # Calculate Molecular Weight 
 def molecular_weight(mol_file):
 
-    oe_in_file = oe.oemolistream()
+    oe_in_file = oechem.oemolistream()
     oe_in_file.open(mol_file)
     mols = oe_in_file.GetOEMols()
-    molw  =  [oe.OECalculateMolecularWeight(mol)  for mol in mols]
+    molw  =  [oechem.OECalculateMolecularWeight(mol)  for mol in mols]
 
     return molw[0]
 
@@ -149,3 +146,29 @@ def sp3_fraction(smi_mol):
      candidate = Chem.AddHs(Chem.MolFromSmiles(smi_mol))
      csp3 = rdMolDescriptors.CalcFractionCSP3(candidate)
      return csp3
+
+#PAINS filter
+
+# AFS: Define Pan-assay interference compounds (PAINS), read from the PAINS.csv
+#      file in the directory
+# https://pubs.acs.org/doi/10.1021/jm5019093
+#Generate Pains Database
+def gen_pains_database():
+    pains_fragment_list = []
+
+    with open(dir_path + '/datasets/PAINS.csv') as infile:
+        next(infile)
+        for line in infile:
+            pains_fragment_list.append(line.split()[0])
+
+    return pains_fragment_list
+
+def pains_filter(molecule, pains_fragment_list):
+    for fragment in pains_fragment_list:
+        fragment_search = oechem.OESubSearch(fragment)
+        oechem.OEPrepareSearch(molecule, fragment_search)
+        if fragment_search.SingleMatch(molecule):
+            return False
+            break
+
+    return True
