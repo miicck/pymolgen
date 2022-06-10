@@ -429,7 +429,11 @@ def filters_final_mol(mol):
         return False
 
 
-def newmol_mw_attachment_points_loop(dataset_path, parent_file, remove_hydrogens, outfile_name, n_mol, max_mw=500):
+def newmol_mw_attachment_points_loop(dataset_path, parent_file, remove_hydrogens, outfile_name, n_mol, max_mw=500,
+                                     seed=None):
+    if seed is not None:
+        random.seed(seed)
+
     sdf_files = glob.glob('%s/mol*.sdf' % dataset_path)
     if len(sdf_files) == 0:
         raise Exception("No molecules in dataset!")
@@ -465,8 +469,4 @@ if __name__ == '__main__':
     remove_hydrogens = [int(i) for i in sys.argv[3].split()]
     outfile_name = sys.argv[4]
     n_mol = int(sys.argv[5])
-
-    random.seed(100)
-    print("Random = ", random.random())
-
-    newmol_mw_attachment_points_loop(dataset_path, parent_file, remove_hydrogens, outfile_name, n_mol)
+    newmol_mw_attachment_points_loop(dataset_path, parent_file, remove_hydrogens, outfile_name, n_mol, seed=100)
