@@ -6,6 +6,7 @@ from pymolgen.bond_generator import RandomBondGenerator
 # Ensure same generation each time
 random.seed(1024)
 
+
 def test_gen():
     smiles = []
     with open("../datasets/test_set", "r") as smiles_chembl:
@@ -22,4 +23,6 @@ def test_gen():
         if i > 100:
             break
 
-#def test_generate_from_sdf():
+
+if __name__ == "__main__":
+    test_gen()
