@@ -268,7 +268,7 @@ def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, bu
     mw = mol.molecular_weight()
     left_budget = budget_mw + parent_mw - mw
 
-    filter_pass = filters_final_mol(mol)
+    filter_pass = filters_final_mol(mol, pains_database)
     if filter_pass == False:
         return None
 
@@ -302,30 +302,26 @@ def filters_additive(oemol, smi):
     n_rot_bonds = num_rot_bond(oemol)
 
     if n_rot_bonds > ROTBOND_THRESHOLD:
-        # print("Failed n_rot_bonds filter", smi)
+        #print("Failed n_rot_bonds filter", smi)
         return (False, n_rot_bonds)
 
     n_chiral = num_chiral_centres(oemol)
 
     if n_chiral > 2:
-        # print("Failed n_chiral filter", smi)
+        #print("Failed n_chiral filter", smi)
         return (False, n_rot_bonds)
 
     h_don = num_lipinsky_donors(oemol)
 
     if h_don > H_DON_TRESHOLD:
-        # print("Failed h_don filter", smi)
+        #print("Failed h_don filter", smi)
         return (False, n_rot_bonds)
 
     h_acc = num_lipinsky_acceptors(oemol)
 
     if h_acc > H_ACC_TRESHOLD:
-        # print("Failed h_acc filter", smi)
+        #print("Failed h_acc filter", smi)
         return (False, n_rot_bonds)
-
-    if PAINS_filter(oemol) == False:
-        print("Failed PAINS_filter", smi)
-        return False
 
     return (True, n_rot_bonds)
 
@@ -358,15 +354,15 @@ def filters_additive_mol(mol):
         oechem.OEAddExplicitHydrogens(oemol)
 
         filters_additive_pass, n_rot_bonds = filters_additive(oemol, smi)
-        # print("filters_additive_pass =", filters_additive_pass, "n_rot_bonds = ", n_rot_bonds)
+        #print("filters_additive_pass =", filters_additive_pass, "n_rot_bonds = ", n_rot_bonds)
         return (filters_additive_pass, n_rot_bonds)
 
     except:
-        print("filters_additive_mol failed with ", smi)
+        raise Exception("filters_additive_mol failed with ", smi)
         return (False, 0)
 
 
-def filters_final(oemol, smi):
+def filters_final(oemol, smi, pains_database):
 
     logp, PSA = oeMolProp(oemol)
 
@@ -386,10 +382,14 @@ def filters_final(oemol, smi):
         print("Failed PFI filter", smi)
         return False
 
+    if pains_filter(oemol, pains_database) == False:
+        print("Failed PAINS_filter", smi)
+        return False
+
     return True
 
 
-def filters_final_mol(mol):
+def filters_final_mol(mol, pains_database):
 
     smi = molecule_to_smiles(mol)
 
@@ -400,11 +400,13 @@ def filters_final_mol(mol):
 
         oechem.OEAddExplicitHydrogens(oemol)
 
-        filters_additive_pass, n_not_bonds = filters_additive(oemol, smi)
-        if filters_additive_pass == False:
-            return False
+        #removed here because test carried out as you build molecule so it'll never fail
+        #filters_additive_pass, n_not_bonds = filters_additive(oemol, smi, pains_database)
+        #if filters_additive_pass == False:
+        #    print("Failed filters_additive")
+        #    return False
 
-        filters_final_pass = filters_final(oemol, smi)
+        filters_final_pass = filters_final(oemol, smi, pains_database)
         if filters_final_pass == False:
             return False
 

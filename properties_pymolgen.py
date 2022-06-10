@@ -163,8 +163,8 @@ def gen_pains_database():
 
     return pains_fragment_list
 
-def pains_filter(molecule, pains_fragment_list):
-    for fragment in pains_fragment_list:
+def pains_filter(molecule, pains_database):
+    for fragment in pains_database:
         fragment_search = oechem.OESubSearch(fragment)
         oechem.OEPrepareSearch(molecule, fragment_search)
         if fragment_search.SingleMatch(molecule):
