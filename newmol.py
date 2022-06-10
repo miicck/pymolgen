@@ -182,7 +182,7 @@ def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, bu
 
     mol = parent_mol
 
-    parent_mw = Molecule.molecular_weight(mol)
+    parent_mw = mol.molecular_weight()
 
     # budget_mw = (max_mw - parent_mw) * random.random()
 
@@ -194,7 +194,7 @@ def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, bu
     for i in mol.graph:
         protected_atoms.append(i)
 
-    mw = Molecule.molecular_weight(mol)
+    mw = mol.molecular_weight()
 
     attachment_points = mol.attach_points
     if len(attachment_points) == 0:
@@ -214,14 +214,16 @@ def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, bu
                 print('MAX LOOP when attaching to attachment_point =', attachment_point)
                 break
             n += 1
-            current_budget = parent_mw + budget_mw - Molecule.molecular_weight(mol) - len(mol.attach_points)
+            mol_n_attach_points = len(mol.attach_points)
+            current_budget = parent_mw + budget_mw - mol.molecular_weight() - mol_n_attach_points
             frag = dataset.random_molecule().random_fragment_keep_cycle_max_mass(min_mass=1.0, max_mass=current_budget,
                                                                                  counter=frag_counter)
             frag_counter += 1
-            if len(frag.attach_points) > 0 and frag.molecular_weight() + mol.molecular_weight() + len(
-                    frag.attach_points) + len(mol.attach_points) - 2 <= parent_mw + budget_mw:
+            frag_n_attach_points = len(frag.attach_points)
+
+            if frag_n_attach_points > 0 and frag.molecular_weight() + mol.molecular_weight() + frag_n_attach_points + mol_n_attach_points - 2 <= parent_mw + budget_mw:
                 smi = molecule_to_smiles(frag)
-                mw = '%.1f' % Molecule.molecular_weight(frag)
+                mw = '%.1f' % frag.molecular_weight()
                 # print("budget = %.1f" %current_budget, "frag1 = ", smi)
                 newmol = Molecule.glue_together_attachmentpoint(mol, frag, RandomBondGenerator(),
                                                                 attachment_point) or mol
@@ -240,12 +242,12 @@ def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, bu
         frag = dataset.random_molecule().random_fragment_keep_cycle_max_mass(min_mass=1.0, max_mass=current_budget,
                                                                              counter=frag_counter)
         frag_counter += 1
-        current_budget = parent_mw + budget_mw - mol.molecular_weight() - len(mol.attach_points)
-        if not is_hydrogen(frag) and len(
-                frag.attach_points) > 0 and frag.molecular_weight() + mol.molecular_weight() + len(
-            frag.attach_points) + len(mol.attach_points) - 2 <= parent_mw + budget_mw:
-            smi = molecule_to_smiles(frag)
-            mw = '%.1f' % frag.molecular_weight()
+        mol_n_attach_points = len(mol.attach_points)
+        frag_n_attach_points = len(frag.attach_points)
+        current_budget = parent_mw + budget_mw - mol.molecular_weight() - mol_n_attach_points
+        if not is_hydrogen(frag) and frag_n_attach_points > 0 and frag.molecular_weight() + mol.molecular_weight() + frag_n_attach_points + mol_n_attach_points - 2 <= parent_mw + budget_mw:
+            #smi = molecule_to_smiles(frag)
+            #mw = '%.1f' % frag.molecular_weight()
             # print("budget = %.1f" %current_budget, "frag2 = ", smi)
             newmol = Molecule.randomly_glue_together(mol, frag, RandomBondGenerator()) or mol
             filters_additive_pass, n_rot_bonds = filters_additive_mol(newmol)
@@ -254,9 +256,10 @@ def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, bu
                 if n_rot_bonds == ROTBOND_THRESHOLD:
                     break
         # break if already at the budget minus 10 (minus 10 because there are no non-hydrogen fragments with mass < 10)
-        if Molecule.molecular_weight(mol) + len(mol.attach_points) >= parent_mw + budget_mw - 10:
+        mol_n_attach_points = len(mol.attach_points)
+        if Molecule.molecular_weight(mol) + mol_n_attach_points >= parent_mw + budget_mw - 10:
             break
-        if len(mol.attach_points) == 0:
+        if mol_n_attach_points == 0:
             remove_hydrogen_pass, mol = remove_hydrogen(mol, protected_atoms)
             if remove_hydrogen_pass == False:
                 print("Cannot Generate new attachment point")
