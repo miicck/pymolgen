@@ -1,6 +1,7 @@
 from pymolgen.molecule import Molecule, BondType
 from typing import List, Tuple, TextIO
 import networkx
+import linecache
 
 def molecule_from_smiles(smiles: str) -> Molecule:
     """
@@ -116,6 +117,32 @@ def molecule_from_bru(bru: str) -> Molecule:
 
     return mol
 
+def parse_sdf_lines(lines: List[str]) -> (List, Tuple[int, int, int]):
+    """
+    Parses atoms and bonds from lines of SDF file
+    """
+
+    atoms = []
+    bonds = []
+
+    for line in lines:
+        if 'V2000' in line: 
+            natoms = int(line[0:3].split()[0])
+            nbonds = int(line[3:6].split()[0])
+            break
+
+    for line in lines[4:4+natoms]:
+        atom = line.split()[3]
+        atoms.append(atom)
+
+    for line in lines[4+natoms:4+natoms+nbonds]:
+        atom1 = int(line[0:3].split()[0]) - 1
+        atom2 = int(line[3:6].split()[0]) - 1
+        order = int(line[6:9].split()[0])
+        bonds.append([atom1, atom2, order])
+
+    return atoms, bonds    
+
 def molecule_from_sdf(sdffilename: str) -> 'Molecule':
     """
     Loads this molecule from an SDF format file.
@@ -135,31 +162,66 @@ def molecule_from_sdf(sdffilename: str) -> 'Molecule':
 
     sdffile = open(sdffilename)
 
-    for line in sdffile:
-        if 'V2000' in line: 
-            natoms = int(line[0:3].split()[0])
-            break
+    lines = sdffile.readlines()
 
-    n = 1
-    for line in sdffile:
-        atom = line.split()[3]
-        atoms.append(atom)
-        if n == natoms: break
-        n += 1
-        
-    for line in sdffile:
-        if 'END' in line:break
-        if 'CHG' in line: break
-        atom1 = int(line[0:3].split()[0]) - 1
-        atom2 = int(line[3:6].split()[0]) - 1
-        order = int(line[6:9].split()[0])
-        bonds.append([atom1, atom2, order])
+    atoms, bonds = parse_sdf_lines(lines)
 
     mol = Molecule()
     mol.graph = graph_from_atoms_bonds(atoms, bonds)
     mol.set_valence_from_bonds()
 
     return mol
+
+def molecule_from_sdf_lines(lines) -> 'Molecule':
+    """
+    Loads this molecule from an SDF format file.
+
+    Parameters
+    ----------
+    lines
+        Lines SDF format file
+
+    Returns
+    -------
+    self if successful, otherwise None
+    """
+
+    atoms = []
+    bonds = []
+
+    atoms, bonds = parse_sdf_lines(lines)
+
+    mol = Molecule()
+    mol.graph = graph_from_atoms_bonds(atoms, bonds)
+    mol.set_valence_from_bonds()
+
+    return mol
+
+def molecule_from_sdf_large(sdffilename: str, start_line: int) -> 'Molecule':
+    """
+    Loads molecule i from a large SDF file
+    """
+    lines = []
+
+    n = start_line
+
+    line = linecache.getline(sdffilename, n)
+    lines.append(line)
+
+    while '$$$$' not in line:
+        n += 1
+        line = linecache.getline(sdffilename, n)
+        lines.append(line)
+        if n - start_line == 1000:
+            break
+
+    atoms, bonds = parse_sdf_lines(lines)
+
+    mol = Molecule()
+    mol.graph = graph_from_atoms_bonds(atoms, bonds)
+    mol.set_valence_from_bonds()
+
+    return mol    
 
 def molecule_to_atoms_bonds(molecule: Molecule) -> (List, Tuple[int, int, int]):
     """
@@ -210,7 +272,7 @@ def atoms_bonds_to_sdf(atoms, bonds):
     n_atoms = len(atoms)
     n_bonds = len(bonds)
 
-    lines.append(' %s %s  0  0  1  0  0  0  0  0999 V2000\n' %(n_atoms, n_bonds))
+    lines.append('{0: >3}{1: >3}  0  0  1  0  0  0  0  0999 V2000\n'.format(n_atoms, n_bonds))
 
     for atom in atoms:
         lines.append('    0.0000    0.0000    0.0000 {0: <3} 0  0  0  0  0  0  0  0  0  0  0  0\n'.format(atom))

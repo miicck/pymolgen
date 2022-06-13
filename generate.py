@@ -1,5 +1,5 @@
 from pymolgen.molecule import Molecule, FractionalOrderException
-from pymolgen.molecule_formats import molecule_from_smiles, molecule_from_sdf
+from pymolgen.molecule_formats import molecule_from_smiles, molecule_from_sdf, molecule_from_sdf_large, molecule_from_sdf_lines
 from pymolgen.bond_generator import BondGenerator
 from typing import Iterable, Iterator, Callable, List, Dict, Tuple, Union
 import random
@@ -61,17 +61,90 @@ class SDFDataset(MoleculeDataset):
     def __len__(self):
         return len(self.sdf_file_abspaths)
 
-class SDFDatasetFile(MoleculeDataset):
+class SDFDatasetLarge(MoleculeDataset):
 
-    def __init__(self, sdf_file_abspaths: Iterable[str]):
+    def __init__(self, sdf_file_abspath: str, max_n = None):
         super().__init__()
-        self.sdf_file_abspaths: List[str] = list(sdf_file_abspaths)
+        self.sdf_file_abspath: str = sdf_file_abspath
+        self.start_lines: List[int] = self.get_start_lines()
+
+        if max_n is not None:
+            self.start_lines = self.start_lines[:max_n]
 
     def load_molecule(self, i: int) -> Molecule:
-        return molecule_from_sdf(self.sdf_file_abspaths[i])
+        start_line = self.start_lines[i]
+        return molecule_from_sdf_large(self.sdf_file_abspath, start_line)
 
     def __len__(self):
-        return len(self.sdf_file_abspaths)
+        return len(self.start_lines)
+
+    def get_start_lines(self):
+        
+        start_lines = []
+        
+        with open(self.sdf_file_abspath) as infile:
+            n = 1
+            for line in infile:
+                if 'V2000' in line:
+                    start_lines.append(n-3)
+                n += 1
+
+        return start_lines
+
+class SDFDatasetLargeRAM(MoleculeDataset):
+
+    def __init__(self, sdf_file_abspath: str, max_n = None):
+        super().__init__()
+        self.sdf_file_abspath: str = sdf_file_abspath
+        self.start_lines: List[int] = self.get_start_lines()
+
+        if max_n is not None:
+            self.start_lines = self.start_lines[:max_n]
+
+        self.lines = []
+
+        max_line = self.start_lines[-1]
+
+        print('DATABASE MOLECULES =', len(self.start_lines))
+
+        with open(self.sdf_file_abspath) as infile:
+            n = 0
+            for line in infile:
+                self.lines.append(line)
+                if n == max_line:
+                    break
+
+        if max_n is not None and max_n > len(self.lines):
+            self.lines = self.lines[:start_lines[max_n+1]]
+
+        print('DATABSE MOLECULES LINES =', len(self.lines))
+
+    def load_molecule(self, i: int) -> Molecule:
+        start_line = self.start_lines[i]
+
+        if i < len(self.start_lines) - 1:
+            end_line = self.start_lines[i+1]
+            mol_lines = self.lines[start_line:end_line]
+        else:
+            mol_lines = self.lines[start_line:]
+
+        return molecule_from_sdf_lines(mol_lines)
+
+    def __len__(self):
+        return len(self.start_lines)
+
+    def get_start_lines(self):
+        
+        start_lines = []
+        
+        with open(self.sdf_file_abspath) as infile:
+            n = 0
+            for line in infile:
+                if 'V2000' in line:
+                    start_lines.append(n-3)
+                n += 1
+
+        return start_lines
 
 def generate_from_molecules(
         dataset: Iterable['Molecule'],

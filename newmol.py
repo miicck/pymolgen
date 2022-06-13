@@ -5,7 +5,7 @@ import random
 from pymolgen.molecule_formats import molecule_from_sdf, molecule_to_smiles, molecule_to_atoms_bonds, molecule_to_sdf
 from pymolgen.molecule_visualization import plot_molecule, plot_molecule_graph
 from pymolgen.molecule import Molecule
-from pymolgen.generate import SDFDataset
+from pymolgen.generate import SDFDataset, SDFDatasetLarge, SDFDatasetLargeRAM
 from pymolgen.bond_generator import RandomBondGenerator
 
 # Import RDKit Tools
@@ -267,7 +267,6 @@ def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, bu
 
     lines = molecule_to_sdf(mol)
 
-    smi = molecule_to_smiles(mol)
     mw = mol.molecular_weight()
     left_budget = budget_mw + parent_mw - mw
 
@@ -275,7 +274,8 @@ def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, bu
     if filter_pass == False:
         return None
 
-    print('NEW_CANDIDATE %s %.1f %.1f' % (smi, mw, left_budget))
+    #smi = molecule_to_smiles(mol)
+    #print('NEW_CANDIDATE %s %.1f %.1f' % (smi, mw, left_budget))
 
     return mol
 
@@ -460,10 +460,50 @@ def newmol_mw_attachment_points_loop(dataset_path, parent_file, remove_hydrogens
             outfile.write('$$$$\n')
 
 
+def newmol_mw_attachment_points_loop_large(dataset_file, parent_file, remove_hydrogens, outfile_name, n_mol, max_n = None, max_mw=500,
+                                     seed=None):
+    if seed is not None:
+        random.seed(seed)
+
+    dataset = SDFDatasetLargeRAM(dataset_file, max_n)
+
+    print(sys.getsizeof(dataset.lines))
+
+    with open(outfile_name, "w") as outfile:
+        print("Generating ", outfile_name)
+
+    parent_mol = molecule_from_sdf(parent_file)
+    parent_mw = Molecule.molecular_weight(parent_mol)
+    budget_mw = (max_mw - parent_mw) * random.random()
+
+    try:
+        pains_database = gen_pains_database()
+    except:
+        raise Exception("Could not generate pains database")
+
+    counter = 0
+    while counter < n_mol:
+        mol = newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, budget_mw, pains_database)
+        if mol is None: continue
+
+        counter += 1
+        budget_mw = (max_mw - parent_mw) * random.random()
+        lines = molecule_to_sdf(mol)
+
+        with open(outfile_name, "a") as outfile:
+            for line in lines:
+                outfile.write(line)
+            outfile.write('$$$$\n')
+
+        smi = molecule_to_smiles(mol)
+        print('NEW_CANDIDATE %s %s' % (counter, smi))
+
+
 if __name__ == '__main__':
     dataset_path = sys.argv[1]
     parent_file = sys.argv[2]
     remove_hydrogens = [int(i) for i in sys.argv[3].split()]
     outfile_name = sys.argv[4]
     n_mol = int(sys.argv[5])
-    newmol_mw_attachment_points_loop(dataset_path, parent_file, remove_hydrogens, outfile_name, n_mol, seed=100)
+    #newmol_mw_attachment_points_loop(dataset_path, parent_file, remove_hydrogens, outfile_name, n_mol, seed=100)
+    newmol_mw_attachment_points_loop_large(dataset_path, parent_file, remove_hydrogens, outfile_name, n_mol, seed=100)
