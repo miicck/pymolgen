@@ -19,6 +19,8 @@ from pymolgen.properties_pymolgen import oeMolProp, num_atomatic_rings, num_chir
 
 from auto_docker import PAINS_filter
 
+print = partial(print, flush=True)
+
 # =============================================================================
 # Define Thresholds
 # =============================================================================
