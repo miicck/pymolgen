@@ -2,6 +2,7 @@ import glob
 import networkx
 import sys, os
 import random
+import argparse
 from pymolgen.molecule_formats import molecule_from_sdf, molecule_to_smiles, molecule_to_atoms_bonds, molecule_to_sdf
 from pymolgen.molecule_visualization import plot_molecule, plot_molecule_graph
 from pymolgen.molecule import Molecule
@@ -179,7 +180,9 @@ def newmol_mw_attachment_points(dataset_path, parent_file, remove_hydrogens, out
     return mol
 
 
-def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, budget_mw, pains_database):
+def newmol_mw_attachment_points_single(dataset, parent_mol, budget_mw, pains_database, remove_hydrogens=None, 
+    remove_hydrogens_max=None, remove_hydrogens_max_n=None):
+    
     min_frag_size = 1
     max_frag_size = 50
 
@@ -187,10 +190,17 @@ def newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, bu
 
     parent_mw = mol.molecular_weight()
 
-    # budget_mw = (max_mw - parent_mw) * random.random()
+    #create attachment points from remove_hydrogens list
+    if remove_hydrogens is not None:
+        for i in remove_hydrogens:
+            mol = mol.remove_atom(i)
 
-    for i in remove_hydrogens:
-        mol = mol.remove_atom(i)
+    #create up to remove_hydrogens_max_n attachment points from remove_hydrogens_max list
+    if remove_hydrogens_max is not None and remove_hydrogens_max_n is not None:
+        random.shuffle(remove_hydrogens_max)
+        remove_hydrogens_max = remove_hydrogens_max[:remove_hydrogens_max_n]
+        for i in remove_hydrogens_max:
+            mol = mol.remove_atom(i)
 
     protected_atoms = []
 
@@ -463,11 +473,13 @@ def newmol_mw_attachment_points_loop(dataset_path, parent_file, remove_hydrogens
             outfile.write('$$$$\n')
 
 
-def newmol_mw_attachment_points_loop_large(dataset_file, parent_file, remove_hydrogens, outfile_name, n_mol, max_n = None, max_mw=500,
-                                     seed=None):
+def newmol_mw_attachment_points_loop_large(dataset_file, parent_file, outfile_name, n_mol, remove_hydrogens=None, max_n = None, 
+    max_mw=500, remove_hydrogens_max=None, remove_hydrogens_max_n=None, seed=None, logfilename=None):
+    
     if seed is not None:
         random.seed(seed)
 
+    print('max_n =', max_n)
     dataset = SDFDatasetLargeRAM(dataset_file, max_n)
 
     print(sys.getsizeof(dataset.lines))
@@ -484,9 +496,13 @@ def newmol_mw_attachment_points_loop_large(dataset_file, parent_file, remove_hyd
     except:
         raise Exception("Could not generate pains database")
 
+    if logfilename is not None:
+        open(logfilename, 'w').close()
+
     counter = 0
     while counter < n_mol:
-        mol = newmol_mw_attachment_points_single(dataset, parent_mol, remove_hydrogens, budget_mw, pains_database)
+        mol = newmol_mw_attachment_points_single(dataset, parent_mol, budget_mw, pains_database, 
+            remove_hydrogens, remove_hydrogens_max, remove_hydrogens_max_n)
         if mol is None: continue
 
         counter += 1
@@ -499,14 +515,36 @@ def newmol_mw_attachment_points_loop_large(dataset_file, parent_file, remove_hyd
             outfile.write('$$$$\n')
 
         smi = molecule_to_smiles(mol)
-        print('NEW_CANDIDATE %s %s' % (counter, smi))
+        printline = 'NEW_CANDIDATE %s %s' % (counter, smi)
+        print(printline)
+        if logfilename is not None:
+            with open(logfilename, 'a') as logfile:
+                logfile.write('%s\n' %printline)
+
+
 
 
 if __name__ == '__main__':
-    dataset_path = sys.argv[1]
-    parent_file = sys.argv[2]
-    remove_hydrogens = [int(i) for i in sys.argv[3].split()]
-    outfile_name = sys.argv[4]
-    n_mol = int(sys.argv[5])
-    #newmol_mw_attachment_points_loop(dataset_path, parent_file, remove_hydrogens, outfile_name, n_mol, seed=100)
-    newmol_mw_attachment_points_loop_large(dataset_path, parent_file, remove_hydrogens, outfile_name, n_mol, seed=100)
+
+    parser = argparse.ArgumentParser(description='Pymolgen molecular generator')
+    parser.add_argument('-d','--dataset_path', help='Dataset path from which fragments will be generated',required=True)
+    parser.add_argument('-p','--parent_file', help='Parent Structure File in SDF format',required=True)
+    parser.add_argument('-o','--outfile_name', help='Output File Name',required=True)
+    parser.add_argument('-n','--n_mol', type=int, help='Number of molecules to generate',required=True)
+    parser.add_argument('-r','--remove_hydrogens', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points, numbered from 0',required=False)
+    parser.add_argument('-R','--remove_hydrogens_max', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points up to remove_hydrogens_max_n simultaneously, numbered from 0',required=False)
+    parser.add_argument('-m','--remove_hydrogens_max_n', type=int, help='Maximum number of hydrogen atoms that will be created as attachment points from remove_hydrogens_max simulaneouly',required=False)
+    parser.add_argument('-s','--seed', type=int, help='Seed for random number generator',required=False)
+    parser.add_argument('-l','--logfilename', help='Log file',required=False)
+    args = parser.parse_args()
+
+    if args.remove_hydrogens_max is not None and args.remove_hydrogens_max_n is None:
+        sys.exit('Need to provide remove_hydrogens_max_n if remove_hydrogens_max set')
+
+    if args.remove_hydrogens_max_n is not None and args.remove_hydrogens_max is None:
+        sys.exit('Need to provide remove_hydrogens_max if remove_hydrogens_max_n set')
+
+    newmol_mw_attachment_points_loop_large(dataset_file=args.dataset_path, parent_file=args.parent_file, 
+        outfile_name=args.outfile_name, n_mol=args.n_mol, remove_hydrogens=args.remove_hydrogens, 
+        remove_hydrogens_max=args.remove_hydrogens_max, remove_hydrogens_max_n=args.remove_hydrogens_max_n, 
+        seed=args.seed, logfilename=args.logfilename)
