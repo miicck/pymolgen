@@ -544,6 +544,9 @@ if __name__ == '__main__':
     if args.remove_hydrogens_max_n is not None and args.remove_hydrogens_max is None:
         sys.exit('Need to provide remove_hydrogens_max if remove_hydrogens_max_n set')
 
+    if args.seed is not None and args.n_mol > 1000:
+        sys.exit('Cannot run with seed and n_mol > 1000')
+
     newmol_mw_attachment_points_loop_large(dataset_file=args.dataset_path, parent_file=args.parent_file, 
         outfile_name=args.outfile_name, n_mol=args.n_mol, remove_hydrogens=args.remove_hydrogens, 
         remove_hydrogens_max=args.remove_hydrogens_max, remove_hydrogens_max_n=args.remove_hydrogens_max_n, 
