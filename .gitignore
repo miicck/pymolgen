@@ -1,3 +1,5 @@
 .idea/
 *pycache*
 test/.cache/
+test/test_gen.sdf
+test/test_logfile.txt
