@@ -71,4 +71,6 @@ def test_sdfdatasetlarge2():
 			assert line1.strip() == line2.strip()
 			n += 1
 
-
+def test_sdf_to_asf():
+	sdf_to_asf('../datasets/database1000/database1000.sdf', '../datasets/database1000/database1000.asf')
+	read_asf_file('../datasets/database1000/database1000.asf')	

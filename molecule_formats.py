@@ -1,7 +1,6 @@
 from pymolgen.molecule import Molecule, BondType
 from typing import List, Tuple, TextIO
 import networkx
-import linecache
 
 def molecule_from_smiles(smiles: str) -> Molecule:
     """
@@ -89,7 +88,7 @@ def molecule_from_bru(bru: str) -> Molecule:
 
     Parameters
     ----------
-    brufilename
+    asf
        Name of bru format file
 
     Returns
@@ -203,17 +202,16 @@ def molecule_from_sdf_large(sdffilename: str, start_line: int) -> 'Molecule':
     """
     lines = []
 
-    n = start_line
+    with open(sdffilename) as infile:
 
-    line = linecache.getline(sdffilename, n)
-    lines.append(line)
+        n = 0
+        for line in infile:
+            if n > start_line:
+                lines.append(line)
 
-    while '$$$$' not in line:
-        n += 1
-        line = linecache.getline(sdffilename, n)
-        lines.append(line)
-        if n - start_line == 1000:
-            break
+            if '$$$$' in line:
+                break
+            n += 1
 
     atoms, bonds = parse_sdf_lines(lines)
 
@@ -318,3 +316,97 @@ def molecule_to_rdkit(molecule: Molecule) -> 'Chem.RWMol':
             }[bond_type])
 
     return mol
+
+def sdf_to_asf(sdffilename: str, asffilename: str):
+    """
+    Converts multi-molecule SDF file to ASF file
+    """
+    if sdffilename == asffilename:
+        raise Exception("sdffilename same as asffilename")
+
+    infile = open(sdffilename)
+    
+    outfile = open(asffilename, 'w') 
+    outfile.close()
+
+    lines = []
+
+    for line in infile:
+        lines.append(line)
+        if '$$$$' in line:
+            atoms, bonds = parse_sdf_lines(lines)
+
+            atoms_bonds_to_asf(atoms, bonds, asffilename)
+            lines = []
+
+    infile.close()
+
+def atoms_bonds_to_asf(atoms, bonds, asffilename):
+
+    with open(asffilename, 'a') as outfile:
+
+        outfile.write('atoms')
+
+        for atom in atoms:
+            outfile.write(' %s' %atom)
+
+        outfile.write('\n')
+
+        outfile.write('bonds')
+
+        for bond in bonds:
+            atom1 = bond[0]
+            atom2 = bond[1]
+            order = bond[2]
+            outfile.write(' %s %s %s' %(atom1, atom2, order))
+
+        outfile.write('\n')
+
+def read_asf_lines(lines: List[str]) -> Molecule:
+    """
+    Loads this molecule from am ASF format file.
+
+    Parameters
+    ----------
+    asf
+       Name of ASF format file
+
+    Returns
+    -------
+    created molecule if successful
+    """
+
+    bonds = []
+
+    for line in lines:
+        if 'atoms' in line:
+            atoms = line.split()[1:]
+        if 'bonds' in line:
+
+            n = 0
+            for i in line.split()[1:]:
+                if n%3 == 0:
+                    atom1 = int(i)
+                if n%3 == 1:
+                    atom2 = int(i)
+                if n%3 == 2:
+                    order = int(i)
+                    bonds.append((atom1, atom2, order))
+                n += 1
+
+    mol = Molecule()
+    mol.graph = graph_from_atoms_bonds(atoms, bonds)
+    mol.set_valence_from_bonds()
+
+    return mol
+
+def read_asf_file(asf):
+
+    with open(asf) as infile:
+        lines = infile.readlines()
+
+    for i in range(len(lines)):
+        if i%2 == 0:
+            mol = read_asf_lines(lines[i:i+2])
+            smi = molecule_to_smiles(mol)
+            print(smi)
