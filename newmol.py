@@ -473,19 +473,33 @@ def newmol_mw_attachment_points_loop(dataset_path, parent_file, remove_hydrogens
             outfile.write('$$$$\n')
 
 
+count_generated_molecules(outfile_name):
+    """
+    Count the number of generated molecules in an SDF file
+    """
+    generated_molecules = 0
+    with open(outfile_name) as f:
+        for line in f:
+            if 'V2000' in line:
+                generated_molecules += 1
+
 def newmol_mw_attachment_points_loop_large(dataset_file, parent_file, outfile_name, n_mol, remove_hydrogens=None, max_n = None, 
-    max_mw=500, remove_hydrogens_max=None, remove_hydrogens_max_n=None, seed=None, logfilename=None):
+    max_mw=500, remove_hydrogens_max=None, remove_hydrogens_max_n=None, seed=None, logfilename=None, restart=False):
     
     if seed is not None:
         random.seed(seed)
 
+    if restart is True:
+        generated_molecules = count_generated_molecules(outfile_name)
+        n_mol = n_mol - generated_molecules
     print('max_n =', max_n)
     dataset = SDFDatasetLargeRAM(dataset_file, max_n)
 
     print(sys.getsizeof(dataset.lines))
 
-    with open(outfile_name, "w") as outfile:
-        print("Generating ", outfile_name)
+    if restart is False:
+        with open(outfile_name, "w") as outfile:
+            print("Generating ", outfile_name)
 
     parent_mol = molecule_from_sdf(parent_file)
     parent_mw = Molecule.molecular_weight(parent_mol)
@@ -496,8 +510,8 @@ def newmol_mw_attachment_points_loop_large(dataset_file, parent_file, outfile_na
     except:
         raise Exception("Could not generate pains database")
 
-    if logfilename is not None:
-        open(logfilename, 'w').close()
+    if logfilename is not None and restart is False:
+            open(logfilename, 'w').close()
 
     counter = 0
     while counter < n_mol:
@@ -536,6 +550,7 @@ if __name__ == '__main__':
     parser.add_argument('-m','--remove_hydrogens_max_n', type=int, help='Maximum number of hydrogen atoms that will be created as attachment points from remove_hydrogens_max simulaneouly',required=False)
     parser.add_argument('-s','--seed', type=int, help='Seed for random number generator',required=False)
     parser.add_argument('-l','--logfilename', help='Log file',required=False)
+    parser.add_argument('--restart', action='store_true', help='Restart generation from previous run')
     args = parser.parse_args()
 
     if args.remove_hydrogens_max is not None and args.remove_hydrogens_max_n is None:
@@ -550,4 +565,4 @@ if __name__ == '__main__':
     newmol_mw_attachment_points_loop_large(dataset_file=args.dataset_path, parent_file=args.parent_file, 
         outfile_name=args.outfile_name, n_mol=args.n_mol, remove_hydrogens=args.remove_hydrogens, 
         remove_hydrogens_max=args.remove_hydrogens_max, remove_hydrogens_max_n=args.remove_hydrogens_max_n, 
-        seed=args.seed, logfilename=args.logfilename)
+        seed=args.seed, logfilename=args.logfilename, restart=args.restart)
