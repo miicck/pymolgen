@@ -475,7 +475,7 @@ def newmol_mw_attachment_points_loop(dataset_path, parent_file, remove_hydrogens
             outfile.write('$$$$\n')
 
 
-count_generated_molecules(outfile_name):
+def count_generated_molecules(outfile_name):
     """
     Count the number of generated molecules in an SDF file
     """
