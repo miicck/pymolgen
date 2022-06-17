@@ -491,9 +491,6 @@ def newmol_mw_attachment_points_loop_large(dataset_file, parent_file, outfile_na
     if seed is not None:
         random.seed(seed)
 
-    if restart is True:
-        generated_molecules = count_generated_molecules(outfile_name)
-        n_mol = n_mol - generated_molecules
     print('max_n =', max_n)
     dataset = SDFDatasetLargeRAM(dataset_file, max_n)
 
@@ -516,6 +513,10 @@ def newmol_mw_attachment_points_loop_large(dataset_file, parent_file, outfile_na
             open(logfilename, 'w').close()
 
     counter = 0
+
+    if restart is True:
+        counter = count_generated_molecules(outfile_name)
+
     while counter < n_mol:
         mol = newmol_mw_attachment_points_single(dataset, parent_mol, budget_mw, pains_database, 
             remove_hydrogens, remove_hydrogens_max, remove_hydrogens_max_n)
