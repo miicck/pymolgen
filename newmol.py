@@ -1,3 +1,5 @@
+!#/usr/bin/python3
+
 import glob
 import networkx
 import sys, os
