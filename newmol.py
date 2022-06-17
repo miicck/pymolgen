@@ -484,6 +484,7 @@ def count_generated_molecules(outfile_name):
         for line in f:
             if 'V2000' in line:
                 generated_molecules += 1
+    return generated_molecules
 
 def newmol_mw_attachment_points_loop_large(dataset_file, parent_file, outfile_name, n_mol, remove_hydrogens=None, max_n = None, 
     max_mw=500, remove_hydrogens_max=None, remove_hydrogens_max_n=None, seed=None, logfilename=None, restart=False):
