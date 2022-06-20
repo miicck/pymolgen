@@ -3,6 +3,7 @@ import sys,os
 from pymolgen.molecule_formats import *
 from pymolgen.molecule_visualization import *
 from pymolgen.molecule import *
+from rdkit import Chem
 
 def test_is_unsaturated():
 	mol = molecule_from_sdf('mol-1.sdf')
@@ -55,8 +56,37 @@ def test_get_noncyclic_unsaturated_fragments():
 
 	mol = molecule_from_sdf('mol-1.sdf')
 
-	fragments = mol.get_noncyclic_unsaturated_fragments()
+	single_bonds = mol.get_single_bonds_not_h_not_c()
 
-	print(fragments)
+	new = split_mol(mol, single_bonds)
+
+
+	mol2 = molecule_from_sdf('mol-1-can.sdf')
+
+	bonds2 = mol2.get_single_bonds_not_h_not_c()
+
+	new2 = split_mol(mol2, bonds2)
+
+	for i in new:
+		for j in new2:
+			equal = networkx.is_isomorphic(i,j)
+
+			if equal is True:
+				print(i.nodes,j.nodes)
+
+
+
+
+def split_mol(mol, bonds):
+
+	for bond in bonds:
+		mol.graph.remove_edge(bond[0], bond[1])
+
+	new = [mol.graph.subgraph(c) for c in networkx.connected_components(mol.graph)]
+
+	return new
+
+
+
 
 test_get_noncyclic_unsaturated_fragments()

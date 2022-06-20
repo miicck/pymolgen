@@ -238,55 +238,100 @@ class Molecule:
 
         return hydrogen_list
 
+    def get_single_bonds_not_h_not_c(self):
+
+
+        cycles = networkx.cycle_basis(self.graph)
+
+        single_bonds = []
+
+        for i in self.graph.nodes:
+            if self.is_hydrogen(i): continue
+            
+            if self.is_cyclic(i):
+                i_cycles = []
+
+                for cycle in cycles:
+                    if i in cycle:
+                        i_cycles.extend(cycle)
+
+                for j in self.graph[i]:
+                    if self.graph[i][j]["order"] == 1 and not self.is_hydrogen(j) and j not in i_cycles:
+                        a = min(i,j)
+                        b = max(i,j)
+                        if [a,b] not in single_bonds: 
+                            single_bonds.append([a,b])
+            else:
+                for j in self.graph[i]:
+                    if self.graph[i][j]["order"] == 1 and not self.is_hydrogen(j):
+                        a = min(i,j)
+                        b = max(i,j)
+                        if [a,b] not in single_bonds: 
+                            single_bonds.append([a,b])                
+
+
+        return single_bonds
+
+
     def get_noncyclic_unsaturated_fragments(self) -> List[int]:
         """
         Returns list of list of nodes that correspond to fragments without braking bonds in cycles or unsaturated bonds
         """
 
         fragments = []
-
-        fragment_n = 0
-        for i in self.graph.nodes:
+        n_fragments = 0
+        for node in self.graph.nodes:
             #ignore hydrogens since those will be included as neighbours
-            if self.is_hydrogen(i): continue
+            if self.is_hydrogen(node): continue
 
-            #check if atoms is already in another fragment
+            #check if atom is already in another fragment
+            repeat = False
             for fragment in fragments:
-                if i in fragment: continue
+                if node in fragment: repeat = True 
 
-            #make new empty fragment
-            fragments.append({})
-            fragment_n += 1
+            if repeat: continue
 
-            if self.is_cyclic(i):
+            if self.is_cyclic(node):
+
+                #make new empty fragment
+                fragment = []
+                n_fragments += 1
 
                 cycles = networkx.cycle_basis(self.graph)
 
+                print('cycles = ', cycles)
+
+                #append to fragment all nodes in cycles node belongs to
                 for cycle in cycles:
-                    if i in cycle:
+                    if node in cycle:
                         for j in cycle:
-                            fragments[fragment_n].add(cycle) 
+                            if j not in fragment: fragment.append(j) 
 
-                fragments[fragment_n] = set(fragments[fragment_n])
-
-                for i in fragments[fragment_n]:
-                    for j in self.graph.nodes[i]:
-                        if j not in fragments[fragment_n]:
-                            get_neighbour_bond_not_single(self, j, fragment)
+                #append to fragment all neighbours with bond order not single and all hydrogens
+                for i in fragment:
+                    self.get_neighbour_bond_not_single(i, fragment)
                     
                     hydrogens = self.get_hydrogen_neighbours(i)
 
                     for hydrogen in hydrogens:
-                        fragments[fragment_n].add(hydrogen)
-            
+                        if hydrogen not in fragment: fragment.append(hydrogen)
+
+                fragments.append(fragment)
+                print(fragments)
 
         return fragments
 
     def get_neighbour_bond_not_single(self, i, fragment):
-        for j in self.graph.nodes[i]:
+        #print('fn = ', fragment)
+        #print('line288 i =', i, 'neighbours =', self.graph[i])
+        for j in self.graph[i]:
+            if j in fragment: continue
+            #print('line291 i =', i, 'neighbours =', self.graph[i])
             if self.graph[i][j]["order"] > 1:
-                fragment.add(j)    
-                get_neighbour_bond_not_single(self, j, fragment)
+                if j not in fragment: 
+                    fragment.append(j)
+                    print('added', j, fragment)
+                self.get_neighbour_bond_not_single(j, fragment)
 
     def random_fragment(self, min_size: int = 1, max_size: int = None) -> 'Molecule':
         """
