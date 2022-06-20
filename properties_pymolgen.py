@@ -147,13 +147,14 @@ def sp3_fraction(smi_mol):
      csp3 = rdMolDescriptors.CalcFractionCSP3(candidate)
      return csp3
 
-#PAINS filter
-
-# AFS: Define Pan-assay interference compounds (PAINS), read from the PAINS.csv
-#      file in the directory
-# https://pubs.acs.org/doi/10.1021/jm5019093
-#Generate Pains Database
 def gen_pains_database():
+    """
+    Define Pan-assay interference compounds (PAINS), read from the PAINS.csv
+    file in the directory
+    https://pubs.acs.org/doi/10.1021/jm5019093
+
+    Returns list of PAINS fragments as pains_fragments_list
+    """
     pains_fragment_list = []
 
     with open(dir_path + '/datasets/PAINS.csv') as infile:
