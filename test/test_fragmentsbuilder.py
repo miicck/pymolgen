@@ -50,3 +50,13 @@ def test_get_hydrogen_neighbours():
 
 	for i in range(len(all_hydrogens_list)):
 		assert check[i] == all_hydrogens_list[i]
+
+def test_get_noncyclic_unsaturated_fragments():
+
+	mol = molecule_from_sdf('mol-1.sdf')
+
+	fragments = mol.get_noncyclic_unsaturated_fragments()
+
+	print(fragments)
+
+test_get_noncyclic_unsaturated_fragments()

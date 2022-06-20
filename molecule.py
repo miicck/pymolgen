@@ -238,6 +238,35 @@ class Molecule:
 
         return hydrogen_list
 
+    def get_noncyclic_unsaturated_fragments(self) -> List[int]:
+        """
+        Returns list of list of nodes that correspond to fragments without braking bonds in cycles or unsaturated bonds
+        """
+
+        fragments = [[]]
+
+        fragment_n = 0
+        for i in self.graph.nodes:
+            if self.is_hydrogen(i): continue
+
+            if self.is_cyclic(i):
+            
+                fragments[fragment_n].append(i)
+                fragments[fragment_n].extend(self.get_hydrogen_neighbours(i))
+                continue
+
+            for j in self.graph[i]:
+                if self.graph[i][j]["order"] > 1:
+                    
+
+
+            if not self.is_unsaturated(i) and not self.is_cyclic(i):
+                fragments.append([])
+                fragment_n += 1
+
+        return fragments
+
+
 
     def random_fragment(self, min_size: int = 1, max_size: int = None) -> 'Molecule':
         """
