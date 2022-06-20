@@ -243,30 +243,50 @@ class Molecule:
         Returns list of list of nodes that correspond to fragments without braking bonds in cycles or unsaturated bonds
         """
 
-        fragments = [[]]
+        fragments = []
 
         fragment_n = 0
         for i in self.graph.nodes:
+            #ignore hydrogens since those will be included as neighbours
             if self.is_hydrogen(i): continue
 
+            #check if atoms is already in another fragment
+            for fragment in fragments:
+                if i in fragment: continue
+
+            #make new empty fragment
+            fragments.append({})
+            fragment_n += 1
+
             if self.is_cyclic(i):
-            
-                fragments[fragment_n].append(i)
-                fragments[fragment_n].extend(self.get_hydrogen_neighbours(i))
-                continue
 
-            for j in self.graph[i]:
-                if self.graph[i][j]["order"] > 1:
+                cycles = networkx.cycle_basis(self.graph)
+
+                for cycle in cycles:
+                    if i in cycle:
+                        for j in cycle:
+                            fragments[fragment_n].add(cycle) 
+
+                fragments[fragment_n] = set(fragments[fragment_n])
+
+                for i in fragments[fragment_n]:
+                    for j in self.graph.nodes[i]:
+                        if j not in fragments[fragment_n]:
+                            get_neighbour_bond_not_single(self, j, fragment)
                     
+                    hydrogens = self.get_hydrogen_neighbours(i)
 
-
-            if not self.is_unsaturated(i) and not self.is_cyclic(i):
-                fragments.append([])
-                fragment_n += 1
+                    for hydrogen in hydrogens:
+                        fragments[fragment_n].add(hydrogen)
+            
 
         return fragments
 
-
+    def get_neighbour_bond_not_single(self, i, fragment):
+        for j in self.graph.nodes[i]:
+            if self.graph[i][j]["order"] > 1:
+                fragment.add(j)    
+                get_neighbour_bond_not_single(self, j, fragment)
 
     def random_fragment(self, min_size: int = 1, max_size: int = None) -> 'Molecule':
         """
