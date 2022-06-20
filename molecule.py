@@ -185,6 +185,23 @@ class Molecule:
                 return True
         return False
 
+    def is_unsaturated(self, i: int) -> bool:
+        """
+        Returns true if the node at the given index is unsaturated (e.g. has double or triple bonds etc)
+        Parameters
+        ----------
+        i
+            The index of the node
+
+        Returns
+        -------
+        True if the node is unsaturated
+        """
+        for j in self.graph[i]:
+            if self.graph[i][j]["order"] > 1:
+                return True
+        return False
+
     def random_fragment(self, min_size: int = 1, max_size: int = None) -> 'Molecule':
         """
         Returns a random fragment (sub-molecule) of this molecule.

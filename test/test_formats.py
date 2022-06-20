@@ -72,5 +72,5 @@ def test_sdfdatasetlarge2():
 			n += 1
 
 def test_sdf_to_asf():
-	sdf_to_asf('../datasets/database1000/database1000.sdf', '../datasets/database1000/database1000.asf')
+s	df_to_asf('../datasets/database1000/database1000.sdf', '../datasets/database1000/database1000.asf')
 	read_asf_file('../datasets/database1000/database1000.asf')	
