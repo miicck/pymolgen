@@ -202,6 +202,43 @@ class Molecule:
                 return True
         return False
 
+    def is_hydrogen(self, i: int) -> bool:
+        """
+        Returns true if the node at the given index is a hydrogen
+        Parameters
+        ----------
+        i
+            The index of the node
+
+        Returns
+        -------
+        True if the node is a hydrogen
+        """
+
+        return self.graph.nodes[i]["element"] == "H"
+
+    def get_hydrogen_neighbours(self, i: int) -> List[int]:
+        """
+        Returns list of hydrogen neighbours bonded to a particular node i
+        Parameters
+        ----------
+        i
+            The index of the node
+
+        Returns
+        -------
+        List of hydrogen neighbours as their node indeces
+        """
+
+        hydrogen_list = []
+
+        for j in self.graph[i]:
+            if self.is_hydrogen(j):
+                hydrogen_list.append(j)
+
+        return hydrogen_list
+
+
     def random_fragment(self, min_size: int = 1, max_size: int = None) -> 'Molecule':
         """
         Returns a random fragment (sub-molecule) of this molecule.
