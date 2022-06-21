@@ -83,7 +83,7 @@ class SDFDatasetLarge(MoleculeDataset):
         start_lines = []
         
         with open(self.sdf_file_abspath) as infile:
-            n = 1
+            n = 0
             for line in infile:
                 if 'V2000' in line:
                     start_lines.append(n-3)

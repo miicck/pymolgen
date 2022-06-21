@@ -130,6 +130,17 @@ def parse_sdf_lines(lines: List[str]) -> (List, Tuple[int, int, int]):
             nbonds = int(line[3:6].split()[0])
             break
 
+    try:
+        natoms
+    except:
+        raise Exception('natoms not set in parse_sdf_lines')
+
+    try:
+        nbonds
+    except:
+        raise Exception('nbonds not set in parse_sdf_lines')
+
+
     for line in lines[4:4+natoms]:
         atom = line.split()[3]
         atoms.append(atom)
@@ -206,11 +217,11 @@ def molecule_from_sdf_large(sdffilename: str, start_line: int) -> 'Molecule':
 
         n = 0
         for line in infile:
-            if n > start_line:
+            if n >= start_line:
                 lines.append(line)
 
-            if '$$$$' in line:
-                break
+                if '$$$$' in line:
+                    break
             n += 1
 
     atoms, bonds = parse_sdf_lines(lines)
