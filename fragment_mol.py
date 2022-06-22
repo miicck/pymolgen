@@ -91,14 +91,14 @@ def get_fragment_index(fragment, fragment_database, fragment_database_len=None, 
 		if fragment_database_len is not None:
 			fragment_database_len_i = fragment_database_len[i]
 		else:
-			fragment_database_i = len(fragment_database[i])
+			fragment_database_len_i = len(fragment_database[i])
 
 		if atom_list_all is not None:
 			atom_list_all_i = atom_list_all[i]
 		else:
 			atom_list_all_i = get_atom_list(fragment_database[i])
 
-		if fragment_len == fragment_database_i and fragment_atom_list == atom_list_all_i:
+		if fragment_len == fragment_database_len_i and fragment_atom_list == atom_list_all_i:
 
 			gm = isomorphism.GraphMatcher(fragment, fragment_database[i])
 
@@ -262,7 +262,9 @@ def make_fragment_database(database_file, fragments_sdf, fragments_txt, frequenc
 		#update database in pairs of fragments by evaluating if 1. each fragment exist, 2. if a pair exists
 		#then update fragments and/or bonds between fragments and frequencies accordingly
 		for i in range(len(pairs)):
-			update_database(pairs[i], bonds[i], fragment_database, fragments, fragment_database_len, frequencies, fragments_sdf, atom_list_all)
+			update_database(pair=pairs[i], bond=bonds[i], fragment_database=fragment_database, frequencies=frequencies, 
+				fragments=fragments, fragments_sdf=fragments_sdf, fragment_database_len=fragment_database_len, 
+				atom_list_all=atom_list_all)
 
 	with open(fragments_txt, 'w') as outfile:
 		outfile.write(print_fragments(fragment_database))

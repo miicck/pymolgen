@@ -138,7 +138,6 @@ def test_update_freq():
 	assert frequencies == {(0, 1, 0, 1): 2, (1, 2, 0, 1): 1, (2, 3, 0, 1): 1, (3, 4, 0, 1): 1, (4, 5, 0, 1): 2, (4, 5, 2, 3): 1}
 
 def test_get_fragment_index():
-#get_fragment_index(fragment, fragment_database, fragment_database_len, atom_list_all)
 	fragment_database = []
 	frequencies = {}
 
@@ -166,4 +165,8 @@ def test_get_fragment_index():
 
 	assert frequencies ==  check
 
-#test_get_fragment_index()
+def test_make_fragment_database():
+
+	make_fragment_database('../datasets/database1000/database10.sdf', 'outputs/fragments_sdf', 'outputs/fragments_txt', 'outputs/frequencies_txt')
+
+test_make_fragment_database()
