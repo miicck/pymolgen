@@ -111,3 +111,59 @@ def test_get_fragments_mol1():
 	for i in range(len(saved_fragments)):
 		assert new_nodes_view[i] == saved_fragments[i]
 
+
+def test_update_freq():
+
+	frequencies = {}
+
+	frequencies[(0,1,0,1)] = 1
+	frequencies[(1,2,0,1)] = 1
+	frequencies[(2,3,0,1)] = 1
+	frequencies[(3,4,0,1)] = 1
+
+	update_freq(frequencies, frag1_index = 0, frag2_index = 1, frag1_map = {10:0}, frag2_map = {20:1}, frag1_bond = 10, frag2_bond = 20)
+
+	assert frequencies == {(0, 1, 0, 1): 2, (1, 2, 0, 1): 1, (2, 3, 0, 1): 1, (3, 4, 0, 1): 1}
+
+	update_freq(frequencies, frag1_index = 4, frag2_index = 5, frag1_map = {10:0}, frag2_map = {20:1}, frag1_bond = 10, frag2_bond = 20)
+
+	assert frequencies == {(0, 1, 0, 1): 2, (1, 2, 0, 1): 1, (2, 3, 0, 1): 1, (3, 4, 0, 1): 1, (4, 5, 0, 1): 1}
+
+	update_freq(frequencies, frag1_index = 4, frag2_index = 5, frag1_map = {0:0}, frag2_map = {1:1}, frag1_bond = 0, frag2_bond = 1)
+
+	assert frequencies == {(0, 1, 0, 1): 2, (1, 2, 0, 1): 1, (2, 3, 0, 1): 1, (3, 4, 0, 1): 1, (4, 5, 0, 1): 2}
+
+	update_freq(frequencies, frag1_index = 4, frag2_index = 5, frag1_map = {2:2}, frag2_map = {3:3}, frag1_bond = 2, frag2_bond = 3)
+
+	assert frequencies == {(0, 1, 0, 1): 2, (1, 2, 0, 1): 1, (2, 3, 0, 1): 1, (3, 4, 0, 1): 1, (4, 5, 0, 1): 2, (4, 5, 2, 3): 1}
+
+def test_get_fragment_index():
+#get_fragment_index(fragment, fragment_database, fragment_database_len, atom_list_all)
+	fragment_database = []
+	frequencies = {}
+
+	mol = molecule_from_sdf('mol-1.sdf')
+
+	fragments, pairs, bonds = get_fragments_dataset(mol)
+
+	for i in range(len(pairs)):
+		update_database(pairs[i], bonds[i], fragment_database, fragments, frequencies)
+
+	out = print_fragments(fragment_database)
+	print(out)
+	print(frequencies)
+
+	mol = molecule_from_sdf('mol-1-can.sdf')
+
+	for i in range(len(pairs)):
+		update_database(pairs[i], bonds[i], fragment_database, fragments, frequencies)
+
+	out = print_fragments(fragment_database)
+	print(out)
+	print(frequencies)
+
+	check = {(0, 1, 0, 1): 2, (1, 2, 3, 4): 2, (2, 3, 4, 5): 2, (3, 4, 5, 7): 2, (4, 5, 7, 8): 2, (5, 6, 8, 11): 2, (4, 6, 7, 13): 2, (4, 7, 7, 15): 2, (7, 8, 19, 20): 2, (6, 9, 28, 29): 2, (6, 9, 31, 29): 2}
+
+	assert frequencies ==  check
+
+#test_get_fragment_index()
