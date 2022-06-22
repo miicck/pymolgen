@@ -3,7 +3,10 @@ import sys,os
 from pymolgen.molecule_formats import *
 from pymolgen.molecule_visualization import *
 from pymolgen.molecule import *
+from pymolgen.fragment_mol import *
 from rdkit import Chem
+
+dir = os.path.dirname(os.path.realpath(__file__))
 
 def test_is_unsaturated():
 	mol = molecule_from_sdf('mol-1.sdf')
@@ -51,3 +54,34 @@ def test_get_hydrogen_neighbours():
 
 	for i in range(len(all_hydrogens_list)):
 		assert check[i] == all_hydrogens_list[i]
+
+
+def test_get_fragments():
+
+	mol = molecule_from_sdf('mol-1.sdf')
+
+	single_bonds = mol.get_single_bonds_not_h_not_c()
+
+	new = split_mol(mol, single_bonds)
+
+	mol2 = molecule_from_sdf('mol-1-can.sdf')
+
+	bonds2 = mol2.get_single_bonds_not_h_not_c()
+
+	new2 = split_mol(mol2, bonds2)
+
+	n_equal = 0
+
+	for i in new:
+		for j in new2:
+			
+			if get_atom_list(i) == get_atom_list(j):
+
+				n_equal += 1
+
+				equal = networkx.is_isomorphic(i,j)
+
+				assert equal is True
+
+	assert n_equal == 16
+
