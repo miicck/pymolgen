@@ -1,12 +1,13 @@
+import sys,os
+import networkx
+import time
+
 from pymolgen.molecule_formats import *
 from pymolgen.generate import *
 from pymolgen.molecule import *
 from networkx.algorithms import isomorphism
-import networkx
-import time
 
-from os.path import expanduser
-home = expanduser("~")
+home = os.path.expanduser("~")
 
 def get_fragments_dataset(mol):
 
@@ -20,8 +21,18 @@ def get_fragments_dataset(mol):
 
 def print_fragments(fragments):
 
+	out = ''
+
 	for fragment in fragments:
-		print(fragment.nodes)
+
+		atoms = []
+
+		for i in fragment.nodes:
+			atoms.append(fragment.nodes[i]['element'])
+
+		out += str(fragment.nodes) + ' ' + str(atoms) + '\n'
+
+	return out
 
 
 def split_mol(mol, bonds):
@@ -111,63 +122,21 @@ def save_fragments_sdf(fragments, outfile_name):
 
 	outfile.close()
 
-def make_fragment_database():
+def save_fragment_sdf(fragment, outfile_name):
 
-	
+	outfile = open(outfile_name, 'a')
 
-	dataset = SDFDatasetLarge(home + '/Downloads/chembl_30.sdf')
+	mol = Molecule()
+	mol.graph = fragment.copy()
+	mol.set_valence_from_bonds()
 
-	fragment_database = []
-	fragment_database_len = []
+	lines = molecule_to_sdf(mol)
 
-	atom_list_all = []
-	bond_list_all = []
+	for line in lines:
+		outfile.write(line)
+	outfile.write('$$$$\n')
 
-	frequencies = {}
-	t0 = time.time()
-	counter = 0
-	for i in range(len(dataset)):
-
-		counter += 1
-
-		if counter % 100 == 0: 
-			print(counter, time.time() - t0)
-			t0 = time.time()
-
-		mol = dataset.load_molecule(i)
-		fragments, pairs, bonds = get_fragments_dataset(mol)
-		
-		for i in range(len(pairs)):
-
-			frag1 = pairs[i][0]
-			frag2 = pairs[i][1]
-
-			frag1_bond = bonds[i][0]
-			frag2_bond = bonds[i][1]
-
-			frag1_is_new, frag1_index, frag1_map = get_fragment_index(fragments[frag1], fragment_database, fragment_database_len, atom_list_all)
-			
-			if frag1_is_new: 
-
-				fragment_database.append(fragments[frag1])
-				fragment_database_len.append(len(fragments[frag1]))
-				atom_list_all.append(get_atom_list(fragments[frag1]))
-
-			frag2_is_new, frag2_index, frag2_map = get_fragment_index(fragments[frag2], fragment_database, fragment_database_len, atom_list_all)
-
-			if frag2_is_new: 
-				fragment_database.append(fragments[frag2])
-				fragment_database_len.append(len(fragments[frag2]))
-				atom_list_all.append(get_atom_list(fragments[frag2]))
-
-			update_freq(frequencies, frag1_index, frag2_index, frag1_map, frag2_map, frag1_bond, frag2_bond)
-
-
-	print_fragments(fragment_database)
-
-	print(frequencies)
-
-	save_fragments_sdf(fragment_database, 'fragments3.sdf')
+	outfile.close()
 
 def get_atom_list(fragment):
 
@@ -183,6 +152,36 @@ def get_atom_list(fragment):
 def to_np_matrix(fragments):
 	for fragment in fragments:
 		matrix = networkx.to_numpy_matrix(fragment)
+
+def update_database(pair, bond, fragment_database, fragments, atom_list_all, fragment_database_len, frequencies, outfile_name):
+
+	frag1 = pair[0]
+	frag2 = pair[1]
+
+	frag1_bond = bond[0]
+	frag2_bond = bond[1]
+
+	frag1_is_new, frag1_index, frag1_map = get_fragment_index(fragments[frag1], fragment_database, fragment_database_len, atom_list_all)
+	
+	if frag1_is_new: 
+
+		fragment_database.append(fragments[frag1])
+		fragment_database_len.append(len(fragments[frag1]))
+		atom_list_all.append(get_atom_list(fragments[frag1]))
+
+		save_fragment_sdf(fragments[frag1], outfile_name)
+
+	frag2_is_new, frag2_index, frag2_map = get_fragment_index(fragments[frag2], fragment_database, fragment_database_len, atom_list_all)
+
+	if frag2_is_new: 
+		fragment_database.append(fragments[frag2])
+		fragment_database_len.append(len(fragments[frag2]))
+		atom_list_all.append(get_atom_list(fragments[frag2]))
+
+		save_fragment_sdf(fragments[frag2], outfile_name)
+
+	update_freq(frequencies, frag1_index, frag2_index, frag1_map, frag2_map, frag1_bond, frag2_bond)
+
 
 def update_freq(frequencies, frag1_index, frag2_index, frag1_map, frag2_map, frag1_bond, frag2_bond):
 
@@ -205,5 +204,53 @@ def update_freq(frequencies, frag1_index, frag2_index, frag1_map, frag2_map, fra
 
 	frequencies[(i,j,k,l)] = 1
 
+def make_fragment_database(database_file, fragments_sdf, fragments_txt, frequencies_txt):
+
+	outfile = open(fragments_sdf, 'w')
+
+	dataset = SDFDatasetLarge(database_file, max_n = 100)
+
+	fragment_database = []
+	fragment_database_len = []
+
+	atom_list_all = []
+
+	frequencies = {}
+	t0 = time.time()
+	counter = 0
+
+	#loop through every molecule in the dataset
+	for i in range(len(dataset)):
+
+		counter += 1
+
+		if counter % 10 == 0: 
+			print(counter, time.time() - t0)
+			t0 = time.time()
+
+		#load new molecule from database
+		mol = dataset.load_molecule(i)
+
+		#split molecule and get fragments, pairs means pairs of fragments bonded together, and bonds is bonds between atoms of each fragment
+		fragments, pairs, bonds = get_fragments_dataset(mol)
+
+		#update database in pairs of fragments by evaluating if 1. each fragment exist, 2. if a pair exists
+		#then update fragments and/or bonds between fragments and frequencies accordingly
+		for i in range(len(pairs)):
+			update_database(pairs[i], bonds[i], fragment_database, fragments, atom_list_all, fragment_database_len, frequencies, fragments_sdf)
+
+	with open(fragments_txt, 'w') as outfile:
+		outfile.write(print_fragments(fragment_database))
+
+	with open(fragments_sdf, 'w') as outfile:
+		for key, val in frequencies.items():
+			outfile.write(f"{str(key)}: {str(val)}\n")
+
 if __name__ == '__main__':
-	make_fragment_database()
+
+	database_file = sys.argv[1]
+	fragments_sdf = sys.argv[2]
+	fragments_txt = sys.argv[3]
+	frequencies_txt = sys.argv[4]
+
+	make_fragment_database(database_file, fragments_txt, fragments_txt, frequencies_txt)

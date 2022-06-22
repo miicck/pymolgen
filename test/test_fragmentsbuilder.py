@@ -85,3 +85,29 @@ def test_get_fragments():
 
 	assert n_equal == 16
 
+def test_get_fragments_mol1():
+
+	mol = molecule_from_sdf('mol-1.sdf')
+
+	single_bonds = mol.get_single_bonds_not_h_not_c()
+
+	new = split_mol(mol, single_bonds)
+
+	new_nodes_view = []
+
+	for fragment in new:
+		nodes = []
+		for i in fragment.nodes:
+			nodes.append(i)
+		new_nodes_view.append(nodes)
+
+	print(new_nodes_view)
+
+
+	print_fragments(new)
+
+	saved_fragments = [[0, 36, 37, 38],[1, 2, 3, 34, 35, 39],[40, 4],[5, 6],[41, 42, 7],[8, 9, 10],[33, 11, 12, 13, 43, 53, 54, 26, 27, 28, 30, 31],[44, 45, 14],[46, 15, 16, 17, 18, 19, 52, 47, 48, 25],[49, 50, 51, 20, 21, 22, 23, 24],[29],[32]]
+
+	for i in range(len(saved_fragments)):
+		assert new_nodes_view[i] == saved_fragments[i]
+
