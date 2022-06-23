@@ -167,6 +167,6 @@ def test_get_fragment_index():
 
 def test_make_fragment_database():
 
-	make_fragment_database('../datasets/database1000/database10.sdf', 'outputs/fragments_sdf', 'outputs/fragments_txt', 'outputs/frequencies_txt')
+	make_fragment_database('../datasets/database1000/database10.sdf', 'outputs/fragments.sdf', 'outputs/fragments.txt', 'outputs/frequencies.txt', 'outputs/frag_frequencies.txt')
 
 test_make_fragment_database()

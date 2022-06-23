@@ -163,7 +163,7 @@ def to_np_matrix(fragments):
 	for fragment in fragments:
 		matrix = networkx.to_numpy_matrix(fragment)
 
-def update_database(pair, bond, fragment_database, fragments, frequencies, fragments_sdf=None, fragment_database_len=None, atom_list_all=None):
+def update_database(pair, bond, fragment_database, fragments, frequencies, frag_frequencies, fragments_sdf=None, fragment_database_len=None, atom_list_all=None):
 
 	frag1 = pair[0]
 	frag2 = pair[1]
@@ -174,6 +174,8 @@ def update_database(pair, bond, fragment_database, fragments, frequencies, fragm
 	frag1_is_new, frag1_index, frag1_map = get_fragment_index(fragments[frag1], fragment_database, fragment_database_len, atom_list_all)
 	
 	if frag1_is_new: 
+
+		frag_frequencies.append(1)
 
 		fragment_database.append(fragments[frag1])
 
@@ -187,9 +189,15 @@ def update_database(pair, bond, fragment_database, fragments, frequencies, fragm
 		if fragments_sdf is not None:
 			save_fragment_sdf(fragments[frag1], fragments_sdf)
 
+	else:
+		frag_frequencies[frag1_index] += 1
+
 	frag2_is_new, frag2_index, frag2_map = get_fragment_index(fragments[frag2], fragment_database, fragment_database_len, atom_list_all)
 
-	if frag2_is_new: 
+	if frag2_is_new:
+
+		frag_frequencies.append(1)
+
 		fragment_database.append(fragments[frag2])
 
 		#fragment_database_len list to increase performance of get_fragment_index
@@ -201,6 +209,11 @@ def update_database(pair, bond, fragment_database, fragments, frequencies, fragm
 
 		if fragments_sdf is not None:
 			save_fragment_sdf(fragments[frag2], fragments_sdf)
+
+
+	else:
+
+		frag_frequencies[frag2_index] += 1
 
 	update_freq(frequencies, frag1_index, frag2_index, frag1_map, frag2_map, frag1_bond, frag2_bond)
 
@@ -229,7 +242,7 @@ def update_freq(frequencies, frag1_index, frag2_index, frag1_map, frag2_map, fra
 	#if (i,j,k,l) is new make new entry into dictionary
 	frequencies[(i,j,k,l)] = 1
 
-def make_fragment_database(database_file, fragments_sdf, fragments_txt, frequencies_txt):
+def make_fragment_database(database_file, fragments_sdf, fragments_txt, frequencies_txt, frag_frequencies_txt):
 
 	outfile = open(fragments_sdf, 'w')
 
@@ -243,6 +256,8 @@ def make_fragment_database(database_file, fragments_sdf, fragments_txt, frequenc
 	frequencies = {}
 	t0 = time.time()
 	counter = 0
+
+	frag_frequencies = []
 
 	#loop through every molecule in the dataset
 	for i in range(len(dataset)):
@@ -262,8 +277,8 @@ def make_fragment_database(database_file, fragments_sdf, fragments_txt, frequenc
 		#update database in pairs of fragments by evaluating if 1. each fragment exist, 2. if a pair exists
 		#then update fragments and/or bonds between fragments and frequencies accordingly
 		for i in range(len(pairs)):
-			update_database(pair=pairs[i], bond=bonds[i], fragment_database=fragment_database, frequencies=frequencies, 
-				fragments=fragments, fragments_sdf=fragments_sdf, fragment_database_len=fragment_database_len, 
+			update_database(pair=pairs[i], bond=bonds[i], fragment_database=fragment_database, frag_frequencies = frag_frequencies,
+				frequencies=frequencies, fragments=fragments, fragments_sdf=fragments_sdf, fragment_database_len=fragment_database_len, 
 				atom_list_all=atom_list_all)
 
 	with open(fragments_txt, 'w') as outfile:
@@ -273,11 +288,17 @@ def make_fragment_database(database_file, fragments_sdf, fragments_txt, frequenc
 		for key, val in frequencies.items():
 			outfile.write(f"{str(key)}: {str(val)}\n")
 
+	with open(frag_frequencies_txt, 'w') as outfile:
+		for i in frag_frequencies:
+			outfile.write('%s ' %i)
+		outfile.write('\n')
+
 if __name__ == '__main__':
 
 	database_file = sys.argv[1]
 	fragments_sdf = sys.argv[2]
 	fragments_txt = sys.argv[3]
 	frequencies_txt = sys.argv[4]
+	frag_frequencies_txt = sys.argv[5]
 
-	make_fragment_database(database_file, fragments_sdf, fragments_txt, frequencies_txt)
+	make_fragment_database(database_file, fragments_sdf, fragments_txt, frequencies_txt, frag_frequencies_txt)
