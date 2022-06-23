@@ -273,8 +273,9 @@ def make_fragment_database(database_file, fragments_sdf, fragments_txt, frequenc
 
 		#split molecule and get fragments, pairs means pairs of fragments bonded together, and bonds is bonds between atoms of each fragment
 		fragments, pairs, bonds = get_fragments_dataset(mol)
-
-		#update database in pairs of fragments by evaluating if 1. each fragment exist, 2. if a pair exists
+		print(counter, pairs)
+		print(print_fragments(fragments))
+		#update database in pairs of fragments by evaluating if 1. each fragment exists, 2. if a pair exists
 		#then update fragments and/or bonds between fragments and frequencies accordingly
 		for i in range(len(pairs)):
 			update_database(pair=pairs[i], bond=bonds[i], fragment_database=fragment_database, frag_frequencies = frag_frequencies,
