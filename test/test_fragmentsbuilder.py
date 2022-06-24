@@ -140,14 +140,14 @@ def test_update_freq():
 def test_get_fragment_index():
 	fragment_database = []
 	frequencies = {}
+	frag_frequencies = []
 
 	mol = molecule_from_sdf('mol-1.sdf')
 
 	fragments, pairs, bonds = get_fragments_dataset(mol)
 
 	for i in range(len(pairs)):
-		update_database(pairs[i], bonds[i], fragment_database, fragments, frequencies)
-
+		update_bond_database(pair=pairs[i], bond=bonds[i], fragment_database=fragment_database, fragments=fragments, frequencies=frequencies, frag_frequencies=frag_frequencies)
 	out = print_fragments(fragment_database)
 	print(out)
 	print(frequencies)
@@ -155,7 +155,7 @@ def test_get_fragment_index():
 	mol = molecule_from_sdf('mol-1-can.sdf')
 
 	for i in range(len(pairs)):
-		update_database(pairs[i], bonds[i], fragment_database, fragments, frequencies)
+		update_bond_database(pair=pairs[i], bond=bonds[i], fragment_database=fragment_database, fragments=fragments, frequencies=frequencies, frag_frequencies=frag_frequencies)
 
 	out = print_fragments(fragment_database)
 	print(out)
@@ -165,8 +165,99 @@ def test_get_fragment_index():
 
 	assert frequencies ==  check
 
+def test_get_unique_fragments_molecule():
+
+	mol = molecule_from_sdf('mol-1.sdf')
+
+	fragment_database_mol, frag_frequencies_mol, frequencies_mol = get_unique_fragments_molecule(mol)
+
+	print(print_fragments(fragment_database_mol))
+
+	print(frag_frequencies_mol)
+
+	print(frequencies_mol)
+
+	assert frag_frequencies_mol == [1, 2, 2, 2, 4, 2, 4, 2, 1, 2]
+	assert frequencies_mol == {(0, 1, 0, 1): 1, (1, 2, 3, 4): 1, (2, 3, 4, 5): 1, (3, 4, 5, 7): 1, (4, 5, 7, 8): 1, (5, 6, 8, 11): 1, (4, 6, 7, 13): 1, (4, 7, 7, 15): 1, (7, 8, 19, 20): 1, (6, 9, 28, 29): 1, (6, 9, 31, 29): 1}
+
 def test_make_fragment_database():
 
-	make_fragment_database('../datasets/database1000/database10.sdf', 'outputs/fragments.sdf', 'outputs/fragments.txt', 'outputs/frequencies.txt', 'outputs/frag_frequencies.txt')
+	fragment_database, frequencies, frag_frequencies = make_fragment_database('../datasets/database1000/database10.sdf', 'outputs/fragments.sdf', 'outputs/fragments.txt', 'outputs/frequencies.txt', 'outputs/frag_frequencies.txt')
 
-test_make_fragment_database()
+def test_mol_bond_frequencies():
+
+	fragment_database, frequencies, frag_frequencies = make_fragment_database('../datasets/database1000/database10.sdf', max_n=1)
+
+	print(print_fragments(fragment_database))
+	print(frequencies)
+	print(frag_frequencies)
+
+	assert frag_frequencies == [1, 1, 1, 1, 2, 1, 1, 1, 1, 2]
+
+def test_mol_bond_frequencies2():
+
+	fragment_database, frequencies, frag_frequencies = make_fragment_database('../datasets/database1000/database10.sdf', max_n=2)
+
+	assert frag_frequencies == [1, 1, 1, 2, 2, 1, 1, 1, 1, 3, 1, 1, 1, 1]
+
+	check = """[0, 36, 37, 38] ['C', 'H', 'H', 'H']
+[1, 2, 3, 34, 35, 39] ['C', 'C', 'C', 'N', 'O', 'H']
+[40, 4] ['H', 'N']
+[5, 6] ['C', 'O']
+[41, 42, 7] ['H', 'H', 'C']
+[8, 9, 10] ['S', 'O', 'O']
+[33, 11, 12, 13, 43, 53, 54, 26, 27, 28, 30, 31] ['C', 'C', 'C', 'N', 'H', 'H', 'H', 'C', 'C', 'C', 'C', 'C']
+[46, 15, 16, 17, 18, 19, 52, 47, 48, 25] ['H', 'C', 'C', 'C', 'C', 'C', 'H', 'H', 'H', 'C']
+[49, 50, 51, 20, 21, 22, 23, 24] ['H', 'H', 'H', 'C', 'C', 'N', 'N', 'C']
+[29] ['F']
+[24, 2] ['H', 'O']
+[3, 4, 5, 36, 9, 10, 11, 18, 20, 21, 22, 23, 25, 31] ['C', 'C', 'N', 'H', 'C', 'C', 'C', 'C', 'C', 'C', 'C', 'O', 'H', 'H']
+[6, 7, 8, 26, 27, 28, 29, 30] ['C', 'C', 'C', 'H', 'H', 'H', 'H', 'H']
+[32, 33, 34, 35, 12, 13, 14, 15, 16, 17] ['H', 'H', 'H', 'H', 'C', 'C', 'C', 'C', 'N', 'C']
+"""
+	assert check == print_fragments(fragment_database)
+
+def test_mol_bond_frequencies3():
+
+	fragment_database, frequencies, frag_frequencies = make_fragment_database('../datasets/database1000/database10.sdf', max_n=10)
+
+	for key, val in frequencies.items():
+		print(key,val)
+
+	print('VAL > 1')
+
+	for key, val in frequencies.items():
+		if val > 1:
+			print(key, val)
+
+	print(print_fragments(fragment_database))
+
+	for fragment in fragment_database:
+		print(print_fragments([fragment]))
+		print(get_canonical_mapping(fragment))
+
+def test_canonical_mapping():
+
+	mol = molecule_from_sdf('mol-1.sdf')
+
+	fragments, pairs, bonds = get_fragments_dataset(mol)
+
+	all_canonical_mappings = []
+
+	for fragment in fragments:
+		all_canonical_mappings.append(get_canonical_mapping(fragment))
+
+	assert all_canonical_mappings == [{0: 0, 36: 36, 37: 36, 38: 36}, {1: 1, 2: 2, 3: 1, 34: 34, 35: 34, 39: 39}, {40: 4, 4: 4}, {5: 5, 6: 5}, {41: 41, 7: 7, 42: 41}, {8: 8, 9: 9, 10: 9}, {33: 33, 11: 11, 12: 12, 13: 13, 43: 43, 26: 26, 27: 27, 53: 53, 28: 28, 30: 30, 54: 54, 31: 31}, {44: 44, 14: 14, 45: 44}, {46: 46, 16: 16, 15: 15, 17: 17, 18: 16, 19: 15, 47: 47, 48: 46, 25: 25, 52: 52}, {49: 49, 21: 21, 20: 20, 22: 20, 23: 23, 50: 50, 24: 23, 51: 50}, {29: 29}, {32: 32}]
+
+def test_compound_dict():
+
+	d1 = {0:1, 2:3, 4:5}
+
+	d2 = {1:7, 3:9, 5:11}
+
+	d1 = compound_dict(d1, d2)
+
+	assert d1 == {0: 7, 2: 9, 4: 11}
+
+test_mol_bond_frequencies3()
+
