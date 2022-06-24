@@ -221,25 +221,6 @@ def test_mol_bond_frequencies2():
 """
 	assert check == print_fragments(fragment_database)
 
-def test_mol_bond_frequencies3():
-
-	fragment_database, frequencies, frag_frequencies = make_fragment_database('../datasets/database1000/database10.sdf', max_n=10)
-
-	for key, val in frequencies.items():
-		print(key,val)
-
-	print('VAL > 1')
-
-	for key, val in frequencies.items():
-		if val > 1:
-			print(key, val)
-
-	print(print_fragments(fragment_database))
-
-	for fragment in fragment_database:
-		print(print_fragments([fragment]))
-		print(get_canonical_mapping(fragment))
-
 def test_canonical_mapping():
 
 	mol = molecule_from_sdf('mol-1.sdf')
@@ -266,5 +247,24 @@ def test_compound_dict():
 
 	assert d1 == {0: 7, 2: 9, 4: 11}
 
-#test_mol_bond_frequencies3()
+def test_mol_bond_frequencies3():
+
+	fragment_database, frequencies, frag_frequencies = make_fragment_database('../datasets/database1000/database10.sdf', max_n=10)
+
+	for key, val in frequencies.items():
+		print(key,val)
+
+	print('VAL > 1')
+
+	for key, val in frequencies.items():
+		if val > 1:
+			print(key, val)
+
+	print(frequencies)
+
+	print(print_fragments(fragment_database))
+
+	check = {(0, 1, 0, 1): 1, (1, 2, 3, 4): 1, (2, 3, 4, 5): 6, (3, 4, 5, 7): 4, (4, 5, 7, 8): 1, (5, 6, 8, 11): 1, (4, 6, 7, 13): 1, (4, 7, 7, 15): 1, (7, 8, 15, 20): 1, (6, 9, 28, 29): 1, (6, 9, 31, 29): 1, (3, 10, 5, 2): 2, (3, 11, 5, 3): 1, (11, 12, 5, 6): 1, (11, 13, 11, 12): 1, (9, 11, 29, 18): 1, (0, 14, 0, 1): 1, (3, 14, 5, 14): 1, (3, 15, 5, 17): 1, (3, 15, 5, 21): 1, (2, 16, 4, 25): 2, (4, 16, 7, 25): 5, (3, 16, 5, 25): 2, (4, 4, 7, 7): 5, (4, 17, 7, 29): 1, (17, 18, 30, 31): 2, (2, 4, 4, 7): 1, (4, 18, 7, 31): 1, (4, 14, 7, 42): 1, (3, 18, 5, 31): 3, (4, 14, 7, 50): 1, (4, 14, 7, 59): 1, (4, 19, 7, 61): 2, (4, 14, 7, 70): 1, (4, 20, 7, 72): 1, (10, 20, 2, 72): 1, (0, 21, 0, 1): 1, (0, 21, 0, 4): 1, (21, 22, 6, 7): 1, (22, 23, 12, 13): 1, (4, 23, 7, 15): 1, (22, 24, 23, 24): 1, (19, 24, 61, 29): 1, (3, 26, 5, 10): 1, (2, 7, 4, 15): 1, (7, 25, 15, 8): 1, (19, 26, 61, 16): 1, (0, 27, 0, 1): 3, (27, 28, 1, 2): 1, (25, 28, 8, 2): 1, (10, 28, 2, 8): 2, (27, 29, 1, 2): 1, (3, 29, 5, 5): 1, (2, 30, 4, 9): 1, (4, 30, 7, 16): 1, (4, 31, 7, 18): 1, (27, 29, 1, 24): 1, (0, 16, 0, 25): 2, (16, 27, 25, 1): 2, (16, 32, 25, 13): 1, (27, 32, 1, 13): 2, (4, 27, 7, 1): 1, (10, 16, 2, 25): 1, (4, 33, 7, 24): 1, (0, 34, 0, 1): 1, (3, 34, 5, 3): 1, (3, 35, 5, 6): 1, (27, 35, 1, 9): 1, (25, 32, 8, 13): 1, (3, 37, 5, 27): 1, (2, 20, 4, 72): 1, (5, 20, 8, 72): 1, (2, 5, 4, 8): 1, (4, 36, 7, 13): 1, (9, 37, 29, 30): 1}
+
+	assert frequencies == check
 
