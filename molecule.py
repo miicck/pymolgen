@@ -240,14 +240,17 @@ class Molecule:
 
     def get_single_bonds_not_h_not_c(self):
 
-
         cycles = networkx.cycle_basis(self.graph)
+
+        for i in cycles:
+            if len(i) > 35:
+                return False
 
         single_bonds = []
 
         for i in self.graph.nodes:
             if self.is_hydrogen(i): continue
-            
+
             if self.is_cyclic(i):
                 i_cycles = []
 

@@ -13,6 +13,9 @@ def get_fragments_dataset(mol):
 
 	single_bonds = mol.get_single_bonds_not_h_not_c()
 
+	if single_bonds is False:
+		return False, False, False
+
 	fragments = split_mol(mol, single_bonds)
 
 	pairs = get_pairs(single_bonds, fragments)
@@ -334,6 +337,8 @@ def make_fragment_database1(database_file, fragments_sdf, fragments_txt, frequen
 
 		#split molecule and get fragments, pairs means pairs of fragments bonded together, and bonds is bonds between atoms of each fragment
 		fragments, pairs, bonds = get_fragments_dataset(mol)
+		if fragments == False:
+			continue
 		print(counter, pairs)
 		print(print_fragments(fragments))
 
@@ -388,7 +393,8 @@ def make_fragment_database(database_file, fragments_sdf=None, fragments_txt=None
 
 		#split molecule and get fragments, pairs means pairs of fragments bonded together, and bonds is bonds between atoms of each fragment
 		fragments, pairs, bonds = get_fragments_dataset(mol)
-
+		if fragments == False:
+			continue
 		frag1_index_list = []
 		frag1_map_list = []
 
