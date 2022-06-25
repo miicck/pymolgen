@@ -268,3 +268,107 @@ def test_mol_bond_frequencies3():
 
 	assert frequencies == check
 
+def test_mol_bond_frequencies_11_20_1():
+
+	fragment_database, frequencies, frag_frequencies = make_fragment_database('../datasets/database1000/database11-20.sdf', max_n=1)
+
+	for key, val in frequencies.items():
+		print(key,val)
+
+	print(frag_frequencies)
+
+	print(print_fragments(fragment_database))
+
+	print(frequencies)
+
+	check = {(0, 1, 0, 1): 2, (1, 2, 1, 2): 1, (2, 3, 4, 5): 1, (3, 4, 5, 6): 2, (4, 4, 6, 6): 2, (3, 5, 5, 10): 1, (5, 6, 14, 15): 1, (1, 5, 1, 22): 1}
+
+	assert frequencies == check
+
+	check = '''[0, 34, 35, 36] ['C', 'H', 'H', 'H']
+[1] ['O']
+[32, 33, 2, 3, 4, 37, 55, 56, 57, 58, 27, 28, 29, 30, 31] ['C', 'C', 'C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'C', 'N', 'C', 'C', 'C']
+[5, 38] ['N', 'H']
+[40, 6, 39] ['H', 'C', 'H']
+[10, 11, 12, 13, 14, 16, 17, 18, 19, 20, 21, 22, 25, 26, 46, 47, 48, 49, 50, 54] ['C', 'C', 'C', 'C', 'C', 'C', 'C', 'N', 'C', 'C', 'C', 'C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H']
+[15] ['Cl']
+'''
+
+	assert print_fragments(fragment_database) == check
+
+	check = [2, 2, 1, 2, 3, 1, 1]
+
+	assert frag_frequencies == check
+
+def test_mol_bond_frequencies_11_20_2():
+
+	fragment_database, frequencies, frag_frequencies = make_fragment_database('../datasets/database1000/database11-20.sdf', max_n=2)
+
+	for key, val in frequencies.items():
+		print(key,val)
+
+	print(frag_frequencies)
+
+	print(print_fragments(fragment_database))
+
+	print(frequencies)
+
+	assert frag_frequencies ==[3, 2, 1, 5, 7, 1, 1, 1, 1, 2, 1, 5, 2, 3]
+
+	assert frequencies == {(0, 1, 0, 1): 2, (1, 2, 1, 2): 1, (2, 3, 4, 5): 1, (3, 4, 5, 6): 3, (4, 4, 6, 6): 3, (3, 5, 5, 10): 1, (5, 6, 14, 15): 1, (1, 5, 1, 22): 1, (0, 7, 0, 1): 1, (4, 7, 6, 1): 1, (7, 10, 1, 15): 1, (4, 8, 6, 3): 1, (8, 9, 8, 9): 1, (8, 9, 11, 9): 1, (10, 11, 15, 19): 1, (3, 11, 5, 19): 3, (3, 12, 5, 22): 2, (4, 12, 6, 22): 2, (11, 12, 19, 22): 2, (4, 11, 6, 19): 1, (11, 13, 19, 33): 3}
+
+	check = '''[0, 34, 35, 36] ['C', 'H', 'H', 'H']
+[1] ['O']
+[32, 33, 2, 3, 4, 37, 55, 56, 57, 58, 27, 28, 29, 30, 31] ['C', 'C', 'C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'C', 'N', 'C', 'C', 'C']
+[5, 38] ['N', 'H']
+[40, 6, 39] ['H', 'C', 'H']
+[10, 11, 12, 13, 14, 16, 17, 18, 19, 20, 21, 22, 25, 26, 46, 47, 48, 49, 50, 54] ['C', 'C', 'C', 'C', 'C', 'C', 'C', 'N', 'C', 'C', 'C', 'C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H']
+[15] ['Cl']
+[1] ['N']
+[3, 4, 5, 6, 7, 8, 10, 11, 13, 14, 47] ['C', 'C', 'N', 'C', 'N', 'C', 'N', 'C', 'C', 'N', 'H']
+[48, 9, 49] ['H', 'N', 'H']
+[68, 69, 40, 41, 15, 16, 17, 18, 52, 53] ['H', 'H', 'C', 'C', 'C', 'C', 'C', 'C', 'H', 'H']
+[19, 20] ['C', 'O']
+[22, 55] ['C', 'H']
+[65, 33] ['H', 'O']
+'''
+
+	assert print_fragments(fragment_database) == check
+
+def test_mol_bond_frequencies_11_20_3():
+
+	fragment_database, frequencies, frag_frequencies = make_fragment_database('../datasets/database1000/database11-20.sdf', max_n=3)
+
+	for key, val in frequencies.items():
+		print(key,val)
+
+	print(frag_frequencies)
+
+	print(print_fragments(fragment_database))
+
+	print(frequencies)
+
+	assert frag_frequencies == [4, 2, 1, 5, 9, 1, 2, 1, 1, 3, 1, 5, 2, 3, 1, 1, 1]
+
+	assert frequencies == {(0, 1, 0, 1): 2, (1, 2, 1, 2): 1, (2, 3, 4, 5): 1, (3, 4, 5, 6): 3, (4, 4, 6, 6): 3, (3, 5, 5, 10): 1, (5, 6, 14, 15): 1, (1, 5, 1, 22): 1, (0, 7, 0, 1): 1, (4, 7, 6, 1): 1, (7, 10, 1, 15): 1, (4, 8, 6, 3): 1, (8, 9, 8, 9): 1, (8, 9, 11, 9): 1, (10, 11, 15, 19): 1, (3, 11, 5, 19): 3, (3, 12, 5, 22): 2, (4, 12, 6, 22): 2, (11, 12, 19, 22): 2, (4, 11, 6, 19): 1, (11, 13, 19, 33): 3, (0, 14, 0, 1): 1, (4, 14, 6, 1): 1, (4, 9, 6, 9): 1, (14, 15, 7, 8): 1, (6, 15, 15, 11): 1, (4, 15, 6, 14): 1, (4, 16, 6, 16): 1}
+
+	check = '''[0, 34, 35, 36] ['C', 'H', 'H', 'H']
+[1] ['O']
+[32, 33, 2, 3, 4, 37, 55, 56, 57, 58, 27, 28, 29, 30, 31] ['C', 'C', 'C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'C', 'N', 'C', 'C', 'C']
+[5, 38] ['N', 'H']
+[40, 6, 39] ['H', 'C', 'H']
+[10, 11, 12, 13, 14, 16, 17, 18, 19, 20, 21, 22, 25, 26, 46, 47, 48, 49, 50, 54] ['C', 'C', 'C', 'C', 'C', 'C', 'C', 'N', 'C', 'C', 'C', 'C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H']
+[15] ['Cl']
+[1] ['N']
+[3, 4, 5, 6, 7, 8, 10, 11, 13, 14, 47] ['C', 'C', 'N', 'C', 'N', 'C', 'N', 'C', 'C', 'N', 'H']
+[48, 9, 49] ['H', 'N', 'H']
+[68, 69, 40, 41, 15, 16, 17, 18, 52, 53] ['H', 'H', 'C', 'C', 'C', 'C', 'C', 'C', 'H', 'H']
+[19, 20] ['C', 'O']
+[22, 55] ['C', 'H']
+[65, 33] ['H', 'O']
+[1, 2, 3, 4, 7] ['C', 'N', 'N', 'C', 'N']
+[8, 9, 10, 11, 13, 14, 29, 30, 31] ['C', 'C', 'C', 'C', 'C', 'C', 'H', 'H', 'H']
+[34, 35, 36, 37, 38, 16, 17, 18, 19, 20, 21] ['H', 'H', 'H', 'H', 'H', 'C', 'C', 'C', 'C', 'C', 'C']
+'''
+
+	assert print_fragments(fragment_database) == check
