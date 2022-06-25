@@ -379,7 +379,7 @@ def make_fragment_database(database_file, fragments_sdf=None, fragments_txt=None
 
 		counter += 1
 
-		if counter % 10 == 0: 
+		if counter % 1 == 0: 
 			print(counter, time.time() - t0)
 			t0 = time.time()
 
