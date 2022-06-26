@@ -385,13 +385,13 @@ def make_fragment_database(database_file, fragments_sdf=None, fragments_txt=None
 		counter += 1
 
 		if counter % 100 == 0: 
-			print('TIME', counter, time.time() - t0)
+			print('TIME', counter, time.time() - t0, flush=True)
 			t0 = time.time()
 
-		if counter % 1000 == 0:
-			print(print_fragments(fragment_database))
-			print(frequencies)
-			print(frag_frequencies)
+		if counter % 5000 == 0:
+			print(print_fragments(fragment_database), flush=True)
+			print(frequencies, flush=True)
+			print(frag_frequencies, flush=True)
 
 		#load new molecule from database
 		mol = dataset.load_molecule(i)
