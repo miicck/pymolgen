@@ -384,7 +384,10 @@ def make_fragment_database(database_file, fragments_sdf=None, fragments_txt=None
 
 		counter += 1
 
+		print('%s ' %counter, end='')
+
 		if counter % 100 == 0: 
+			print()
 			print('TIME', counter, time.time() - t0, flush=True)
 			t0 = time.time()
 
