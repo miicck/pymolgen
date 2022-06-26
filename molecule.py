@@ -243,7 +243,8 @@ class Molecule:
         cycles = networkx.cycle_basis(self.graph)
 
         for i in cycles:
-            if len(i) > 35:
+            print(len(i))
+            if len(i) > 25:
                 return False
 
         single_bonds = []
