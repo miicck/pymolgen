@@ -384,7 +384,7 @@ def make_fragment_database(database_file, fragments_sdf=None, fragments_txt=None
 
 		counter += 1
 
-		print('%s ' %counter, end='')
+		print('%s ' %counter, end='', flush=True)
 
 		if counter % 100 == 0: 
 			print()
