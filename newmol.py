@@ -540,8 +540,6 @@ def newmol_mw_attachment_points_loop_large(dataset_file, parent_file, outfile_na
                 logfile.write('%s\n' %printline)
 
 
-
-
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Pymolgen molecular generator')

@@ -104,6 +104,7 @@ class Molecule:
                 points.append(i)
         return points
 
+
     ###########
     # Methods #
     ###########

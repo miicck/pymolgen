@@ -111,7 +111,7 @@ def get_fragment_index(fragment, fragment_database, fragment_database_len=None, 
 		else:
 			atom_list_all_i = get_atom_list(fragment_database[i])
 
-		if fragment_len == fragment_database_len_i: #and fragment_atom_list == atom_list_all_i:
+		if fragment_len == fragment_database_len_i and fragment_atom_list == atom_list_all_i:
 
 			gm = isomorphism.GraphMatcher(fragment, fragment_database[i], node_match=node_compare_element)
 

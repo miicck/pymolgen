@@ -146,6 +146,7 @@ class SDFDatasetLargeRAM(MoleculeDataset):
 
         return start_lines
 
+
 def generate_from_molecules(
         dataset: Iterable['Molecule'],
         accept: Callable[[Molecule], bool],
