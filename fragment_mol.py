@@ -361,7 +361,7 @@ def make_fragment_database1(database_file, fragments_sdf, fragments_txt, frequen
 			outfile.write('%s ' %i)
 		outfile.write('\n')
 
-def make_fragment_database(database_file, fragments_sdf=None, fragments_txt=None, frequencies_txt=None, frag_frequencies_txt=None, max_n=None):
+def make_fragment_database(database_file, fragments_sdf=None, fragments_txt=None, frequencies_txt=None, frag_frequencies_txt=None, max_n=None, verbose=False):
 
 	if fragments_sdf is not None:
 		outfile = open(fragments_sdf, 'w')
@@ -384,7 +384,7 @@ def make_fragment_database(database_file, fragments_sdf=None, fragments_txt=None
 
 		counter += 1
 
-		print('%s ' %counter, end='', flush=True)
+		if verbose: print('%s ' %counter, end='', flush=True)
 
 		if counter % 100 == 0: 
 			print()
@@ -392,9 +392,14 @@ def make_fragment_database(database_file, fragments_sdf=None, fragments_txt=None
 			t0 = time.time()
 
 		if counter % 5000 == 0:
-			print(print_fragments(fragment_database), flush=True)
-			print(frequencies, flush=True)
-			print(frag_frequencies, flush=True)
+			if verbose:
+				print(print_fragments(fragment_database), flush=True)
+				print(frequencies, flush=True)
+				print(frag_frequencies, flush=True)
+
+			save_fragments_txt(fragment_database, fragments_txt)
+			save_frequencies_txt(frequencies, frequencies_txt)
+			save_frag_frequencies_txt(frag_frequencies, frag_frequencies_txt)
 
 		#load new molecule from database
 		mol = dataset.load_molecule(i)
@@ -428,22 +433,30 @@ def make_fragment_database(database_file, fragments_sdf=None, fragments_txt=None
 
 			update_freq(frequencies, frag1_index, frag2_index, frag1_map, frag2_map, frag1_bond, frag2_bond)
 
+	save_fragments_txt(fragment_database, fragments_txt)
+	save_frequencies_txt(frequencies, frequencies_txt)
+	save_frag_frequencies_txt(frag_frequencies, frag_frequencies_txt)
+
+	return fragment_database, frequencies, frag_frequencies
+
+def save_fragments_txt(fragment_database, fragments_txt):
 	if fragments_txt is not None:
 		with open(fragments_txt, 'w') as outfile:
 			outfile.write(print_fragments(fragment_database))
 
+def save_frequencies_txt(frequencies, frequencies_txt):
 	if frequencies_txt is not None:
 		with open(frequencies_txt, 'w') as outfile:
 			for key, val in frequencies.items():
 				outfile.write(f"{str(key)}: {str(val)}\n")
 
+def save_frag_frequencies_txt(frag_frequencies, frag_frequencies_txt):
 	if frag_frequencies_txt is not None:
 		with open(frag_frequencies_txt, 'w') as outfile:
-			for i in frag_frequencies:
-				outfile.write('%s ' %i)
+			for i in range(len(frag_frequencies)):
+				outfile.write('%s ' %frag_frequencies[i])
+				if i + 1 % 10 == 0: outfile.write('\n')
 			outfile.write('\n')
-
-	return fragment_database, frequencies, frag_frequencies
 
 def get_canonical_mapping(fragment):
 	gm = isomorphism.GraphMatcher(fragment, fragment, node_match=node_compare_element)
