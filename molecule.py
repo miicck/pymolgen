@@ -104,6 +104,26 @@ class Molecule:
                 points.append(i)
         return points
 
+    @property
+    def free_valence_list(self) -> List[int]:
+        """
+        Returns
+        -------
+        List of open valences in the molecule,
+        if one atom can form two bonds it will 
+        return the atom number twice
+        """
+        points = []
+        for i in self.graph:
+            v = self.free_valence(i)
+            print('i,v=', i,v)
+            print('valence', self.graph.nodes[i]["valence"], self.total_order_of_bonds(i))
+            if is_integer_order(v) and to_integer_order(v) > 0:
+                for j in range(v):
+                    points.append(i)
+        print(points)
+        return points        
+
 
     ###########
     # Methods #

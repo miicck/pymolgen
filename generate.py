@@ -117,7 +117,7 @@ class SDFDatasetLargeRAM(MoleculeDataset):
         if max_n is not None and max_n > len(self.lines):
             self.lines = self.lines[:start_lines[max_n+1]]
 
-        print('DATABSE MOLECULES LINES =', len(self.lines))
+        print('DATABASE MOLECULES LINES =', len(self.lines))
 
     def load_molecule(self, i: int) -> Molecule:
         start_line = self.start_lines[i]

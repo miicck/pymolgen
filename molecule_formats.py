@@ -2,6 +2,19 @@ from pymolgen.molecule import Molecule, BondType
 from typing import List, Tuple, TextIO
 import networkx
 
+def print_molecule(mol: Molecule) -> str:
+
+    out = ''
+
+    atoms = []
+
+    for i in mol.graph.nodes:
+        atoms.append(mol.graph.nodes[i]['element'])
+
+    out += str(mol.graph.nodes) + ' ' + str(atoms)
+
+    print(out)
+
 def molecule_from_smiles(smiles: str) -> Molecule:
     """
     Loads a molecule from a smiles string.
