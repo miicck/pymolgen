@@ -311,62 +311,6 @@ def get_unique_fragments_molecule(mol):
 	return fragment_database_mol, frag_frequencies_mol, frequencies_mol
 
 
-
-def make_fragment_database_old(database_file, fragments_sdf, fragments_txt, frequencies_txt, frag_frequencies_txt):
-
-	outfile = open(fragments_sdf, 'w')
-
-	dataset = SDFDatasetLarge(database_file)
-
-	fragment_database = []
-	fragment_database_len = []
-
-	atom_list_all = []
-
-	frequencies = {}
-	t0 = time.time()
-	counter = 0
-
-	frag_frequencies = []
-
-	#loop through every molecule in the dataset
-	for i in range(len(dataset)):
-
-		counter += 1
-
-		if counter % 10 == 0: 
-			print(counter, time.time() - t0)
-			t0 = time.time()
-
-		#load new molecule from database
-		mol = dataset.load_molecule(i)
-
-		#split molecule and get fragments, pairs means pairs of fragments bonded together, and bonds is bonds between atoms of each fragment
-		fragments, pairs, bonds = get_fragments_dataset(mol)
-		if fragments == False:
-			continue
-		print(counter, pairs)
-		print(print_fragments(fragments))
-
-		#update database in pairs of fragments by evaluating if 1. each fragment exists, 2. if a pair exists
-		#then update fragments and/or bonds between fragments and frequencies accordingly
-		for i in range(len(pairs)):
-			update_bond_database(pair=pairs[i], bond=bonds[i], fragment_database=fragment_database, frag_frequencies = frag_frequencies,
-				frequencies=frequencies, fragments=fragments, fragments_sdf=fragments_sdf, fragment_database_len=fragment_database_len, 
-				atom_list_all=atom_list_all)
-
-	with open(fragments_txt, 'w') as outfile:
-		outfile.write(print_fragments(fragment_database))
-
-	with open(frequencies_txt, 'w') as outfile:
-		for key, val in frequencies.items():
-			outfile.write(f"{str(key)}: {str(val)}\n")
-
-	with open(frag_frequencies_txt, 'w') as outfile:
-		for i in frag_frequencies:
-			outfile.write('%s ' %i)
-		outfile.write('\n')
-
 def make_fragment_database(database_file, fragments_sdf=None, fragments_txt=None, frequencies_txt=None, frag_frequencies_txt=None, max_n=None, verbose=False):
 
 	if fragments_sdf is not None:
