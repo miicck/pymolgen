@@ -68,7 +68,7 @@ def molecule_to_smiles(mol: Molecule) -> str:
     return Chem.MolToSmiles(molecule_to_rdkit(mol))
 
 
-def graph_from_atoms_bonds(atoms: List[str], bonds: List[Tuple[int,int,int]]) -> 'Networkx graph':
+def graph_from_atoms_bonds(atoms: List[str], bonds: List[Tuple[int,int,int]], valences: List[int]=None) -> 'Networkx graph':
     """
     Convert list of atoms and bonds to networkx graph
 
@@ -78,6 +78,8 @@ def graph_from_atoms_bonds(atoms: List[str], bonds: List[Tuple[int,int,int]]) ->
         list of atoms as strings
     bonds
         list of int, int, int with atom1, atom2 and bond order between the two
+    valences
+        list of int for the valence of each atom
 
     Returns
     -------
@@ -92,6 +94,10 @@ def graph_from_atoms_bonds(atoms: List[str], bonds: List[Tuple[int,int,int]]) ->
 
     for bond in bonds:
         graph.add_edge(bond[0], bond[1], order=bond[2])
+
+    if valences is not None:
+        for i in range(len(valences)):
+            graph.nodes[i]['valence'] = valences[i]
 
     return graph
 
@@ -137,11 +143,14 @@ def parse_sdf_lines(lines: List[str]) -> (List, Tuple[int, int, int]):
     atoms = []
     bonds = []
 
+    n = 0
     for line in lines:
         if 'V2000' in line: 
             natoms = int(line[0:3].split()[0])
             nbonds = int(line[3:6].split()[0])
-            break
+        if 'valences' in line:
+            valences_line = n + 1
+        n += 1
 
     try:
         natoms
@@ -164,7 +173,13 @@ def parse_sdf_lines(lines: List[str]) -> (List, Tuple[int, int, int]):
         order = int(line[6:9].split()[0])
         bonds.append([atom1, atom2, order])
 
-    return atoms, bonds    
+    try:
+        valences_line
+        valences = lines[valences_line].split()
+    except:
+        valences = None
+
+    return atoms, bonds, valences
 
 def molecule_from_sdf(sdffilename: str) -> 'Molecule':
     """
@@ -187,11 +202,12 @@ def molecule_from_sdf(sdffilename: str) -> 'Molecule':
 
     lines = sdffile.readlines()
 
-    atoms, bonds = parse_sdf_lines(lines)
+    atoms, bonds, valences = parse_sdf_lines(lines)
 
     mol = Molecule()
-    mol.graph = graph_from_atoms_bonds(atoms, bonds)
-    mol.set_valence_from_bonds()
+    mol.graph = graph_from_atoms_bonds(atoms, bonds, valences)
+    if valences is None:
+        mol.set_valence_from_bonds()
 
     return mol
 
@@ -212,11 +228,12 @@ def molecule_from_sdf_lines(lines) -> 'Molecule':
     atoms = []
     bonds = []
 
-    atoms, bonds = parse_sdf_lines(lines)
+    atoms, bonds, valences = parse_sdf_lines(lines)
 
     mol = Molecule()
-    mol.graph = graph_from_atoms_bonds(atoms, bonds)
-    mol.set_valence_from_bonds()
+    mol.graph = graph_from_atoms_bonds(atoms, bonds, valences)
+    if valences is None:
+        mol.set_valence_from_bonds()
 
     return mol
 
@@ -237,11 +254,14 @@ def molecule_from_sdf_large(sdffilename: str, start_line: int) -> 'Molecule':
                     break
             n += 1
 
-    atoms, bonds = parse_sdf_lines(lines)
+    atoms, bonds, valences = parse_sdf_lines(lines)
 
     mol = Molecule()
-    mol.graph = graph_from_atoms_bonds(atoms, bonds)
-    mol.set_valence_from_bonds()
+
+    mol.graph = graph_from_atoms_bonds(atoms, bonds, valences)
+
+    if valences is None:
+        mol.set_valence_from_bonds()
 
     return mol    
 
@@ -368,7 +388,7 @@ def sdf_to_asf(sdffilename: str, asffilename: str):
     for line in infile:
         lines.append(line)
         if '$$$$' in line:
-            atoms, bonds = parse_sdf_lines(lines)
+            atoms, bonds, valences = parse_sdf_lines(lines)
 
             atoms_bonds_to_asf(atoms, bonds, asffilename)
             lines = []
