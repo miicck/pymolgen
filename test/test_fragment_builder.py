@@ -23,25 +23,3 @@ def test_update_bond_frequencies():
 
     assert bond_frequencies == check
 
-def test_update_frag_valence():
-
-    fragment_database = get_fragment_database('../datasets/database1000/fragments1.sdf')
-    frag_mapping = get_frag_mapping('../datasets/database1000/fragments1.txt')
-    bond_frequencies = get_bond_frequencies('../datasets/database1000/frequencies1.txt')
-    bond_frequencies = update_bond_frequencies(bond_frequencies, frag_mapping)
-
-    print(bond_frequencies)
-
-    update_frag_valence(fragment_database, bond_frequencies)
-
-    for i in range(len(fragment_database)):
-	    print(i)
-
-	    mol = fragment_database[i]
-
-	    for j in mol.graph.nodes:	
-	    	print(mol.graph.nodes[j]['element'], mol.graph.nodes[j]['valence'])
-
-	    print(mol.attach_points)
-	    print(mol.free_valence_list)
-
