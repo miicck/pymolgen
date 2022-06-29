@@ -12,6 +12,7 @@ Molecule
 M  END
 > <valences>
 3 1 1 1 
+
 $$$$
 Molecule
  pymolgen
@@ -32,6 +33,7 @@ Molecule
 M  END
 > <valences>
 3 4 3 3 2 1 
+
 $$$$
 Molecule
  pymolgen
@@ -43,6 +45,7 @@ Molecule
 M  END
 > <valences>
 1 1 
+
 $$$$
 Molecule
  pymolgen
@@ -54,6 +57,7 @@ Molecule
 M  END
 > <valences>
 2 2 
+
 $$$$
 Molecule
  pymolgen
@@ -67,6 +71,7 @@ Molecule
 M  END
 > <valences>
 1 1 2 
+
 $$$$
 Molecule
  pymolgen
@@ -80,6 +85,7 @@ Molecule
 M  END
 > <valences>
 4 2 2 
+
 $$$$
 Molecule
  pymolgen
@@ -113,6 +119,7 @@ Molecule
 M  END
 > <valences>
 4 3 4 2 1 1 1 4 4 3 4 3 
+
 $$$$
 Molecule
  pymolgen
@@ -141,6 +148,7 @@ Molecule
 M  END
 > <valences>
 1 3 4 4 4 3 1 1 1 4 
+
 $$$$
 Molecule
  pymolgen
@@ -165,6 +173,7 @@ Molecule
 M  END
 > <valences>
 1 1 1 3 4 3 3 4 
+
 $$$$
 Molecule
  pymolgen
@@ -174,6 +183,7 @@ Molecule
 M  END
 > <valences>
 0 
+
 $$$$
 Molecule
  pymolgen
@@ -185,6 +195,7 @@ Molecule
 M  END
 > <valences>
 1 1 
+
 $$$$
 Molecule
  pymolgen
@@ -222,6 +233,7 @@ Molecule
 M  END
 > <valences>
 3 4 2 1 4 4 3 3 4 4 4 2 1 1 
+
 $$$$
 Molecule
  pymolgen
@@ -246,6 +258,7 @@ Molecule
 M  END
 > <valences>
 3 4 4 1 1 1 1 1 
+
 $$$$
 Molecule
  pymolgen
@@ -274,6 +287,7 @@ Molecule
 M  END
 > <valences>
 1 1 1 1 3 4 4 4 3 4 
+
 $$$$
 Molecule
  pymolgen
@@ -389,6 +403,7 @@ Molecule
 M  END
 > <valences>
 2 4 2 4 4 4 4 4 4 4 2 1 2 4 1 3 1 1 1 3 4 2 3 3 4 2 3 1 3 4 2 3 3 4 2 3 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+
 $$$$
 Molecule
  pymolgen
@@ -421,6 +436,7 @@ Molecule
 M  END
 > <valences>
 1 1 1 1 1 1 1 2 4 4 4 3 
+
 $$$$
 Molecule
  pymolgen
@@ -432,6 +448,7 @@ Molecule
 M  END
 > <valences>
 1 1 
+
 $$$$
 Molecule
  pymolgen
@@ -443,6 +460,7 @@ Molecule
 M  END
 > <valences>
 2 2 
+
 $$$$
 Molecule
  pymolgen
@@ -456,6 +474,7 @@ Molecule
 M  END
 > <valences>
 1 1 2 
+
 $$$$
 Molecule
  pymolgen
@@ -486,6 +505,7 @@ Molecule
 M  END
 > <valences>
 4 4 4 1 1 1 1 1 3 4 4 
+
 $$$$
 Molecule
  pymolgen
@@ -514,6 +534,7 @@ Molecule
 M  END
 > <valences>
 3 4 4 3 4 4 1 1 1 1 
+
 $$$$
 Molecule
  pymolgen
@@ -532,6 +553,7 @@ Molecule
 M  END
 > <valences>
 3 3 2 3 3 
+
 $$$$
 Molecule
  pymolgen
@@ -567,6 +589,7 @@ Molecule
 M  END
 > <valences>
 1 4 4 3 4 4 4 3 1 1 3 3 3 
+
 $$$$
 Molecule
  pymolgen
@@ -589,6 +612,7 @@ Molecule
 M  END
 > <valences>
 3 1 3 2 4 1 4 
+
 $$$$
 Molecule
  pymolgen
@@ -623,6 +647,7 @@ Molecule
 M  END
 > <valences>
 1 1 1 1 1 1 2 4 2 4 3 4 1 
+
 $$$$
 Molecule
  pymolgen
@@ -632,6 +657,7 @@ Molecule
 M  END
 > <valences>
 0 
+
 $$$$
 Molecule
  pymolgen
@@ -673,6 +699,7 @@ Molecule
 M  END
 > <valences>
 1 1 1 1 1 2 4 4 4 3 3 3 4 4 1 1 
+
 $$$$
 Molecule
  pymolgen
@@ -682,6 +709,7 @@ Molecule
 M  END
 > <valences>
 0 
+
 $$$$
 Molecule
  pymolgen
@@ -719,6 +747,7 @@ Molecule
 M  END
 > <valences>
 3 3 4 2 4 3 4 4 3 4 4 2 1 1 
+
 $$$$
 Molecule
  pymolgen
@@ -745,6 +774,7 @@ Molecule
 M  END
 > <valences>
 3 4 4 3 1 4 3 1 1 
+
 $$$$
 Molecule
  pymolgen
@@ -792,6 +822,7 @@ Molecule
 M  END
 > <valences>
 3 4 4 4 4 4 4 2 1 1 1 1 1 1 1 1 1 1 1 
+
 $$$$
 Molecule
  pymolgen
@@ -816,6 +847,7 @@ Molecule
 M  END
 > <valences>
 1 1 1 3 4 4 4 2 
+
 $$$$
 Molecule
  pymolgen
@@ -844,6 +876,7 @@ Molecule
 M  END
 > <valences>
 3 4 4 1 4 3 4 1 1 1 
+
 $$$$
 Molecule
  pymolgen
@@ -884,6 +917,7 @@ Molecule
 M  END
 > <valences>
 1 1 1 1 1 4 1 4 2 4 4 4 1 1 1 1 
+
 $$$$
 Molecule
  pymolgen
@@ -914,6 +948,7 @@ Molecule
 M  END
 > <valences>
 2 4 3 1 1 4 4 2 1 1 1 
+
 $$$$
 Molecule
  pymolgen
@@ -952,6 +987,7 @@ Molecule
 M  END
 > <valences>
 1 1 2 4 1 1 4 1 1 3 4 4 1 1 1 
+
 $$$$
 Molecule
  pymolgen
@@ -991,6 +1027,7 @@ Molecule
 M  END
 > <valences>
 1 1 1 1 3 4 3 4 4 1 4 4 4 1 4 
+
 $$$$
 Molecule
  pymolgen
@@ -1017,4 +1054,5 @@ Molecule
 M  END
 > <valences>
 3 4 1 1 1 3 4 4 3 
+
 $$$$

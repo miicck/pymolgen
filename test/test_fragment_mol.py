@@ -372,3 +372,27 @@ def test_mol_bond_frequencies_11_20_3():
 '''
 
 	assert print_fragments(fragment_database) == check
+
+
+def test_split_mol():
+
+	mol = molecule_from_sdf('mol-1.sdf')
+
+	fragments, pairs, single_bonds = get_fragments_dataset(mol)
+
+	valences = []
+	elements = []
+
+	for frag in fragments:
+		for i in frag.nodes:
+			valences.append(frag.nodes[i]['valence'])
+			elements.append(frag.nodes[i]['element'])
+
+	check = [4, 1, 1, 1, 4, 4, 4, 3, 2, 1, 1, 3, 4, 2, 1, 1, 4, 6, 2, 2, 4, 4, 4, 3, 1, 1, 1, 4, 4, 4, 4, 4, 1, 1, 4, 1, 4, 4, 4, 4, 4, 1, 1, 1, 4, 1, 1, 1, 4, 4, 3, 3, 4, 1, 1]
+
+	assert valences == check
+
+	check = ['C', 'H', 'H', 'H', 'C', 'C', 'C', 'N', 'O', 'H', 'H', 'N', 'C', 'O', 'H', 'H', 'C', 'S', 'O', 'O', 'C', 'C', 'C', 'N', 'H', 'H', 'H', 'C', 'C', 'C', 'C', 'C', 'H', 'H', 'C', 'H', 'C', 'C', 'C', 'C', 'C', 'H', 'H', 'H', 'C', 'H', 'H', 'H', 'C', 'C', 'N', 'N', 'C', 'F', 'F']
+
+	assert elements == check
+

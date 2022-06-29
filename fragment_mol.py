@@ -45,6 +45,12 @@ def split_mol(mol, bonds):
 
 	new = [mol.graph.subgraph(c) for c in networkx.connected_components(mol.graph)]
 
+	for frag in new:
+		print(print_fragments([frag]))
+		for i in frag.nodes:
+			print(i, frag.nodes[i]['valence'])
+
+
 	return new
 
 def get_pairs(bonds, fragments):
@@ -306,7 +312,7 @@ def get_unique_fragments_molecule(mol):
 
 
 
-def make_fragment_database1(database_file, fragments_sdf, fragments_txt, frequencies_txt, frag_frequencies_txt):
+def make_fragment_database_old(database_file, fragments_sdf, fragments_txt, frequencies_txt, frag_frequencies_txt):
 
 	outfile = open(fragments_sdf, 'w')
 
