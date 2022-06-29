@@ -254,6 +254,12 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
             #add new_free_valence_list to the list of available valence points in molecule being built
             frag_free_valence_list.append(new_free_valence_list)
 
+    print('frag_list =', frag_list)
+    print('frag_bond_list =', frag_bond_list)
+
+#def combine_fragments(frag_mol_list, frag_bond_list):
+
+
 if __name__ == '__main__':
 
     random.seed(100)
