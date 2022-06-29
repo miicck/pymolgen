@@ -129,33 +129,6 @@ def get_random_neighbour(fragment_i, fragment_bond_frequencies):
 
     return new_frag_i, fragment_i_atom, new_frag_i_atom
 
-def update_frag_valence(fragment_database, bond_frequencies):
-
-    for fragment_i in range(len(fragment_database)):
-
-        mol = fragment_database[fragment_i]
-
-        print('fragment_i =', fragment_i)
-
-        fragment_bond_frequencies = get_fragment_bond_frequencies(fragment_i, bond_frequencies)
-
-        attach_points = []
-
-        for key, val in fragment_bond_frequencies.items():
-            if key[0] == fragment_i:
-                if key[2] not in attach_points:
-                    attach_points.append(key[2])
-            if key[1] == fragment_i:
-                if key[3] not in attach_points:
-                    attach_points.append(key[3])
-
-        print('attach_points =', attach_points)
-
-        for i in attach_points:
-            mol.graph.nodes[i]['valence'] += 1
-
-    return True
-
 def update_bond_frequencies(bond_frequencies, frag_mapping):
 
     d = {}
@@ -187,7 +160,6 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
     frag_mapping = get_frag_mapping(fragments_txt)
     bond_frequencies = get_bond_frequencies(frequencies_txt)   
     bond_frequencies = update_bond_frequencies(bond_frequencies, frag_mapping)
-    update_frag_valence(fragment_database, bond_frequencies)
 
     mol = molecule_from_sdf(parent_file)
 
