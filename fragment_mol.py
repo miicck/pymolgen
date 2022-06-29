@@ -45,12 +45,6 @@ def split_mol(mol, bonds):
 
 	new = [mol.graph.subgraph(c) for c in networkx.connected_components(mol.graph)]
 
-	for frag in new:
-		print(print_fragments([frag]))
-		for i in frag.nodes:
-			print(i, frag.nodes[i]['valence'])
-
-
 	return new
 
 def get_pairs(bonds, fragments):
