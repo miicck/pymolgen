@@ -263,12 +263,15 @@ def molecule_to_atoms_bonds(molecule: Molecule) -> (List, Tuple[int, int, int]):
 
     atoms = []
     bonds = []
+    valences = []
 
     ids = {i: n for n, i in enumerate(molecule.graph.nodes)}
 
     for i in molecule.graph.nodes:
         atom = molecule.graph.nodes[i]["element"]
         atoms.append(atom)
+        valence = molecule.graph.nodes[i]["valence"]
+        valences.append(valence)
 
     n_edges = len(list(molecule.graph.edges))
 
@@ -280,14 +283,14 @@ def molecule_to_atoms_bonds(molecule: Molecule) -> (List, Tuple[int, int, int]):
         bonds.append([atom1, atom2, order])
         n += 1
 
-    return atoms, bonds
+    return atoms, bonds, valences
 
 def molecule_to_sdf(molecule):
-    atoms, bonds = molecule_to_atoms_bonds(molecule)
-    lines = atoms_bonds_to_sdf(atoms, bonds)
+    atoms, bonds, valences = molecule_to_atoms_bonds(molecule)
+    lines = atoms_bonds_to_sdf(atoms, bonds, valences)
     return lines
 
-def atoms_bonds_to_sdf(atoms, bonds):
+def atoms_bonds_to_sdf(atoms, bonds, valences=None):
     lines = []
     lines.append('Molecule\n pymolgen\n\n')
 
@@ -306,6 +309,13 @@ def atoms_bonds_to_sdf(atoms, bonds):
         lines.append('{0: >3}{1: >3}  {2}  0  0  0  0\n'.format(atom1, atom2, order))
 
     lines.append('M  END\n')
+
+    if valences is not None:
+        lines.append('> <valences>\n')
+        line = ''
+        for i in valences:
+            line += '%s ' %i
+        lines.append('%s\n\n' %line)
 
     return lines
 

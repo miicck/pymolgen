@@ -10,6 +10,8 @@ Molecule
   1  3  1  0  0  0  0
   1  4  1  0  0  0  0
 M  END
+> <valences>
+3 1 1 1 
 $$$$
 Molecule
  pymolgen
@@ -28,6 +30,8 @@ Molecule
   3  4  2  0  0  0  0
   4  5  1  0  0  0  0
 M  END
+> <valences>
+3 4 3 3 2 1 
 $$$$
 Molecule
  pymolgen
@@ -37,6 +41,8 @@ Molecule
     0.0000    0.0000    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0
   1  2  1  0  0  0  0
 M  END
+> <valences>
+1 1 
 $$$$
 Molecule
  pymolgen
@@ -46,6 +52,8 @@ Molecule
     0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
   1  2  2  0  0  0  0
 M  END
+> <valences>
+2 2 
 $$$$
 Molecule
  pymolgen
@@ -57,6 +65,8 @@ Molecule
   1  3  1  0  0  0  0
   2  3  1  0  0  0  0
 M  END
+> <valences>
+1 1 2 
 $$$$
 Molecule
  pymolgen
@@ -68,6 +78,8 @@ Molecule
   1  2  2  0  0  0  0
   1  3  2  0  0  0  0
 M  END
+> <valences>
+4 2 2 
 $$$$
 Molecule
  pymolgen
@@ -99,6 +111,8 @@ Molecule
  10 11  1  0  0  0  0
  11 12  2  0  0  0  0
 M  END
+> <valences>
+4 3 4 2 1 1 1 4 4 3 4 3 
 $$$$
 Molecule
  pymolgen
@@ -125,6 +139,8 @@ Molecule
   6 10  1  0  0  0  0
   7 10  1  0  0  0  0
 M  END
+> <valences>
+1 3 4 4 4 3 1 1 1 4 
 $$$$
 Molecule
  pymolgen
@@ -147,6 +163,8 @@ Molecule
   6  7  1  0  0  0  0
   7  8  1  0  0  0  0
 M  END
+> <valences>
+1 1 1 3 4 3 3 4 
 $$$$
 Molecule
  pymolgen
@@ -154,6 +172,8 @@ Molecule
   1  0  0  0  1  0  0  0  0  0999 V2000
     0.0000    0.0000    0.0000 F   0  0  0  0  0  0  0  0  0  0  0  0
 M  END
+> <valences>
+0 
 $$$$
 Molecule
  pymolgen
@@ -163,6 +183,8 @@ Molecule
     0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
   1  2  1  0  0  0  0
 M  END
+> <valences>
+1 1 
 $$$$
 Molecule
  pymolgen
@@ -198,6 +220,8 @@ Molecule
  10 11  1  0  0  0  0
  11 12  2  0  0  0  0
 M  END
+> <valences>
+3 4 2 1 4 4 3 3 4 4 4 2 1 1 
 $$$$
 Molecule
  pymolgen
@@ -220,6 +244,8 @@ Molecule
   3  7  1  0  0  0  0
   3  8  1  0  0  0  0
 M  END
+> <valences>
+3 4 4 1 1 1 1 1 
 $$$$
 Molecule
  pymolgen
@@ -246,6 +272,8 @@ Molecule
   8  9  2  0  0  0  0
   9 10  1  0  0  0  0
 M  END
+> <valences>
+1 1 1 1 3 4 4 4 3 4 
 $$$$
 Molecule
  pymolgen
@@ -359,6 +387,8 @@ Molecule
  34 35  2  0  0  0  0
  34 36  1  0  0  0  0
 M  END
+> <valences>
+2 4 2 4 4 4 4 4 4 4 2 1 2 4 1 3 1 1 1 3 4 2 3 3 4 2 3 1 3 4 2 3 3 4 2 3 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
 $$$$
 Molecule
  pymolgen
@@ -389,6 +419,8 @@ Molecule
  10 11  1  0  0  0  0
  11 12  1  0  0  0  0
 M  END
+> <valences>
+1 1 1 1 1 1 1 2 4 4 4 3 
 $$$$
 Molecule
  pymolgen
@@ -398,6 +430,8 @@ Molecule
     0.0000    0.0000    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
   1  2  1  0  0  0  0
 M  END
+> <valences>
+1 1 
 $$$$
 Molecule
  pymolgen
@@ -407,6 +441,8 @@ Molecule
     0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
   1  2  2  0  0  0  0
 M  END
+> <valences>
+2 2 
 $$$$
 Molecule
  pymolgen
@@ -418,6 +454,8 @@ Molecule
   1  3  1  0  0  0  0
   2  3  1  0  0  0  0
 M  END
+> <valences>
+1 1 2 
 $$$$
 Molecule
  pymolgen
@@ -446,6 +484,8 @@ Molecule
   9 10  1  0  0  0  0
  10 11  2  0  0  0  0
 M  END
+> <valences>
+4 4 4 1 1 1 1 1 3 4 4 
 $$$$
 Molecule
  pymolgen
@@ -472,6 +512,8 @@ Molecule
   5  9  1  0  0  0  0
   6 10  1  0  0  0  0
 M  END
+> <valences>
+3 4 4 3 4 4 1 1 1 1 
 $$$$
 Molecule
  pymolgen
@@ -488,6 +530,8 @@ Molecule
   3  4  1  0  0  0  0
   4  5  2  0  0  0  0
 M  END
+> <valences>
+3 3 2 3 3 
 $$$$
 Molecule
  pymolgen
@@ -521,6 +565,8 @@ Molecule
  11 12  1  0  0  0  0
  12 13  2  0  0  0  0
 M  END
+> <valences>
+1 4 4 3 4 4 4 3 1 1 3 3 3 
 $$$$
 Molecule
  pymolgen
@@ -541,6 +587,8 @@ Molecule
   4  7  1  0  0  0  0
   6  7  1  0  0  0  0
 M  END
+> <valences>
+3 1 3 2 4 1 4 
 $$$$
 Molecule
  pymolgen
@@ -573,6 +621,8 @@ Molecule
  10 11  1  0  0  0  0
  10 13  1  0  0  0  0
 M  END
+> <valences>
+1 1 1 1 1 1 2 4 2 4 3 4 1 
 $$$$
 Molecule
  pymolgen
@@ -580,6 +630,8 @@ Molecule
   1  0  0  0  1  0  0  0  0  0999 V2000
     0.0000    0.0000    0.0000 Cl  0  0  0  0  0  0  0  0  0  0  0  0
 M  END
+> <valences>
+0 
 $$$$
 Molecule
  pymolgen
@@ -619,6 +671,8 @@ Molecule
  12 13  1  0  0  0  0
  13 14  1  0  0  0  0
 M  END
+> <valences>
+1 1 1 1 1 2 4 4 4 3 3 3 4 4 1 1 
 $$$$
 Molecule
  pymolgen
@@ -626,6 +680,8 @@ Molecule
   1  0  0  0  1  0  0  0  0  0999 V2000
     0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
 M  END
+> <valences>
+0 
 $$$$
 Molecule
  pymolgen
@@ -661,6 +717,8 @@ Molecule
  10 11  1  0  0  0  0
  11 12  2  0  0  0  0
 M  END
+> <valences>
+3 3 4 2 4 3 4 4 3 4 4 2 1 1 
 $$$$
 Molecule
  pymolgen
@@ -685,6 +743,8 @@ Molecule
   5  6  1  0  0  0  0
   6  7  1  0  0  0  0
 M  END
+> <valences>
+3 4 4 3 1 4 3 1 1 
 $$$$
 Molecule
  pymolgen
@@ -730,6 +790,8 @@ Molecule
   7 18  1  0  0  0  0
   7 19  1  0  0  0  0
 M  END
+> <valences>
+3 4 4 4 4 4 4 2 1 1 1 1 1 1 1 1 1 1 1 
 $$$$
 Molecule
  pymolgen
@@ -752,6 +814,8 @@ Molecule
   6  7  2  0  0  0  0
   7  8  1  0  0  0  0
 M  END
+> <valences>
+1 1 1 3 4 4 4 2 
 $$$$
 Molecule
  pymolgen
@@ -778,6 +842,8 @@ Molecule
   5  9  1  0  0  0  0
   7 10  1  0  0  0  0
 M  END
+> <valences>
+3 4 4 1 4 3 4 1 1 1 
 $$$$
 Molecule
  pymolgen
@@ -816,6 +882,8 @@ Molecule
  12 14  1  0  0  0  0
  12 15  1  0  0  0  0
 M  END
+> <valences>
+1 1 1 1 1 4 1 4 2 4 4 4 1 1 1 1 
 $$$$
 Molecule
  pymolgen
@@ -844,6 +912,8 @@ Molecule
   6  7  1  0  0  0  0
   7  8  2  0  0  0  0
 M  END
+> <valences>
+2 4 3 1 1 4 4 2 1 1 1 
 $$$$
 Molecule
  pymolgen
@@ -880,6 +950,8 @@ Molecule
  10 11  1  0  0  0  0
  11 12  1  0  0  0  0
 M  END
+> <valences>
+1 1 2 4 1 1 4 1 1 3 4 4 1 1 1 
 $$$$
 Molecule
  pymolgen
@@ -917,6 +989,8 @@ Molecule
  11 14  1  0  0  0  0
  12 13  1  0  0  0  0
 M  END
+> <valences>
+1 1 1 1 3 4 3 4 4 1 4 4 4 1 4 
 $$$$
 Molecule
  pymolgen
@@ -941,4 +1015,6 @@ Molecule
   7  8  2  0  0  0  0
   8  9  1  0  0  0  0
 M  END
+> <valences>
+3 4 1 1 1 3 4 4 3 
 $$$$
