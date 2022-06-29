@@ -396,3 +396,29 @@ def test_split_mol():
 
 	assert elements == check
 
+def test_valence_make_fragment_database():
+
+	fragment_database, frequencies, frag_frequencies = make_fragment_database('../datasets/database1000/database1.sdf')
+
+	elements = []
+	valences = []
+
+	for i in range(len(fragment_database)):
+
+		frag = fragment_database[i]
+
+		for j in frag.nodes:
+			elements.append(frag.nodes[j]['element'])
+			valences.append(frag.nodes[j]['valence'])				
+
+
+	check = [4, 1, 1, 1, 4, 4, 4, 3, 2, 1, 1, 3, 4, 2, 1, 1, 4, 6, 2, 2, 4, 4, 4, 3, 1, 1, 1, 4, 4, 4, 4, 4, 1, 4, 4, 4, 4, 4, 1, 1, 1, 4, 1, 1, 1, 4, 4, 3, 3, 4, 1]
+
+	assert valences == check
+
+	check = ['C', 'H', 'H', 'H', 'C', 'C', 'C', 'N', 'O', 'H', 'H', 'N', 'C', 'O', 'H', 'H', 'C', 'S', 'O', 'O', 'C', 'C', 'C', 'N', 'H', 'H', 'H', 'C', 'C', 'C', 'C', 'C', 'H', 'C', 'C', 'C', 'C', 'C', 'H', 'H', 'H', 'C', 'H', 'H', 'H', 'C', 'C', 'N', 'N', 'C', 'F']
+
+	assert elements == check	
+
+
+

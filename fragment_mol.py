@@ -161,7 +161,6 @@ def save_fragment_sdf(fragment, fragments_sdf):
 
 	mol = Molecule()
 	mol.graph = fragment.copy()
-	mol.set_valence_from_bonds()
 
 	lines = molecule_to_sdf(mol)
 

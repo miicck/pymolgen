@@ -45,4 +45,3 @@ def test_update_frag_valence():
 	    print(mol.attach_points)
 	    print(mol.free_valence_list)
 
-test_update_frag_valence()
