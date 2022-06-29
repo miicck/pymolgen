@@ -175,7 +175,7 @@ def parse_sdf_lines(lines: List[str]) -> (List, Tuple[int, int, int]):
 
     try:
         valences_line
-        valences = lines[valences_line].split()
+        valences = [int(x) for x in lines[valences_line].split()]
     except:
         valences = None
 
