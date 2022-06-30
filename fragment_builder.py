@@ -1,5 +1,6 @@
 import sys,os
 import random
+import numpy as np
 
 import networkx
 from networkx.algorithms import isomorphism
@@ -196,6 +197,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
         sys.exit('Parent fragment not found')
 
     frag_list.append(parent_fragment_i)
+    print('start frag list =', frag_list)
 
     counter = 0
     while get_length(frag_free_valence_list) != 0:
@@ -204,11 +206,13 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
         counter += 1
         if counter == 100: break
 
-        #choose random position of constituent fragment in molecule
+        #choose random position of constituent fragments in molecule
         i = random.randrange(len(frag_list))
 
         #if chosen fragment has free valence points
         if len(frag_free_valence_list[i]) > 0:
+
+            j = len(frag_list)
 
             #get atom from fragment_i to build on
             atom_i = random.choice(frag_free_valence_list[i])
@@ -225,12 +229,13 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
             #add neighbour index in fragment_database to frag_list
             frag_list.append(new_frag_i)
+            print('updated frag list =', frag_list)
 
             #generate molecule object from new_frag_i
             new_frag = fragment_database[new_frag_i]
 
             #add new fragment molecule object to frag_mol_list
-            frag_mol_list.append(new_frag)
+            #frag_mol_list.append(new_frag)
 
             print('new mol =', end=''); print_molecule(new_frag)
 
@@ -240,7 +245,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
             print('new_frag_free_valence_list =', new_frag.free_valence_list)
 
             #add bond betweent current fragment and new fragment to list of bonds between fragments (frag_bond_list)
-            frag_bond_list.append((fragment_i, new_frag_i, fragment_i_atom, new_frag_i_atom))
+            frag_bond_list.append((i, j, fragment_i_atom, new_frag_i_atom))
 
             #remove atom from current fragment making bond to new fragment from frag_free_valence_list[i]
             print('fragment_i_atom', fragment_i_atom)
@@ -257,8 +262,114 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
     print('frag_list =', frag_list)
     print('frag_bond_list =', frag_bond_list)
 
-#def combine_fragments(frag_mol_list, frag_bond_list):
+    for i in frag_list:
+        frag_mol_list.append(fragment_database[i])
 
+    mol = combine_all_fragments(frag_mol_list, frag_list, frag_bond_list)
+
+    for i in mol.graph.nodes:
+        print(mol.graph.nodes[i])
+
+    print_molecule(mol)
+
+    lines = molecule_to_sdf(mol)
+
+    with open('mol.sdf', 'w') as outfile:
+        for line in lines:
+            outfile.write(line)
+
+def combine_all_fragments(frag_mol_list, frag_list, frag_bond_list):
+
+    mol = Molecule()
+
+    for i in frag_mol_list:
+        print_molecule(i)
+
+    new_frag_bond_list = []
+
+    frag_len_list = [len(i.graph.nodes) for i in frag_mol_list]
+    print('frag_len_list=', frag_len_list)
+
+    added_frag_len_list = [0]
+
+    for i in range(1,len(frag_len_list)):
+        added_frag_len_list.append(sum(frag_len_list[:i]))
+
+    print(added_frag_len_list)
+
+    for bond in frag_bond_list:
+        i = bond[0]
+        j = bond[1]
+        k = bond[2]
+        l = bond[3]
+        print(i,j,k,l)
+
+        k += added_frag_len_list[i-1]
+        l += added_frag_len_list[j-1]
+
+        new_frag_bond_list.append((i,j,k,l))
+
+    print('new frag bond list =', new_frag_bond_list)
+
+    graphs = [x.graph for x in frag_mol_list]
+
+    mol.graph = networkx.disjoint_union_all(graphs)
+
+    for bond in new_frag_bond_list:
+        k = bond[2]
+        l = bond[3]
+        mol.graph.add_edge(k, l, order=1)        
+
+    return mol
+
+def combine_two_fragments(
+        molecule_a,
+        molecule_b,
+        a_point,
+        b_point,
+        name_a,
+        name_b):
+    """
+    Given two molecules, attempt to glue them together by creating a bond
+    between the attachment point of molecule_a and free valence points of molecule_b. 
+    Returns None if no compatible valence points exist.
+
+    Parameters
+    ----------
+    molecule_a
+        First molecule
+    molecule_b
+        Second molecule
+    atom_a
+        Attachment point of molecule_a
+    atom_b
+        Attachment point of molecule_b
+    Returns
+    -------
+    None if molecules could not be glued together, otherwise
+    the newly-created, glued-together molecule.
+    """
+
+    if len(molecule_a.attach_points) == 0:
+        return None
+    if len(molecule_b.attach_points) == 0:
+        return None
+
+    # Create a copy of molecule b that does not share node ids with molecule a 
+    # and update b_point with new numbering
+    molecule_b = molecule_b.copy()
+    #molecule_b.make_disjoint(molecule_a)
+    #b_point += len(molecule_a.nodes)
+
+    # Build the glued-together molecule
+    mol = Molecule()
+
+    assert a_point in molecule_a.graph.nodes
+    assert b_point in molecule_b.graph.nodes
+    
+    mol.graph = networkx.union(molecule_b.graph, molecule_a.graph, rename=('%s-' %name_a, '%s-' %name_b))
+
+    return mol
 
 if __name__ == '__main__':
 
