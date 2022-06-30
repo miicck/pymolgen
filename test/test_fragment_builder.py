@@ -23,3 +23,17 @@ def test_update_bond_frequencies():
 
     assert bond_frequencies == check
 
+def test_free_valence_list():
+
+    fragment_database = get_fragment_database('../datasets/fragments/fragments10.sdf')
+
+    free_valence_list_list = []
+
+    for i in range(len(fragment_database)):
+
+        free_valence_list_list.append(fragment_database[i].free_valence_list)
+
+    check = [[0], [0, 2], [1, 1], [0, 0], [2, 2], [0, 0], [1, 3, 9, 11], [1, 5], [3], [0], [1], [0, 2, 6, 7], [0], [4], [0, 15, 22, 26, 31, 35], [7, 11], [0, 0, 0], [0, 1, 1], [2], [8], [0, 3], [0, 3, 4], [3, 10, 12], [0, 3], [6, 10], [0], [5, 11], [0, 0], [0, 1, 5, 8], [0, 3, 6], [0, 7], [3], [0, 5], [8], [0, 2], [2, 9], [4], [5, 8]]
+
+    assert free_valence_list_list == check
+

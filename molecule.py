@@ -116,12 +116,9 @@ class Molecule:
         points = []
         for i in self.graph:
             v = self.free_valence(i)
-            print('i,v=', i,v)
-            print('valence', self.graph.nodes[i]["valence"], self.total_order_of_bonds(i))
             if is_integer_order(v) and to_integer_order(v) > 0:
                 for j in range(v):
                     points.append(i)
-        print(points)
         return points        
 
 

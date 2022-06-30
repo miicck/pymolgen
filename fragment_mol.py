@@ -113,7 +113,7 @@ def get_fragment_index(fragment, fragment_database, fragment_database_len=None, 
 
 		if fragment_len == fragment_database_len_i and fragment_atom_list == atom_list_all_i:
 
-			gm = isomorphism.GraphMatcher(fragment, fragment_database[i], node_match=node_compare_element)
+			gm = isomorphism.GraphMatcher(fragment, fragment_database[i], node_match=node_compare_element, edge_match= lambda e1,e2: e1['order'] == e2['order'])
 
 			if gm.is_isomorphic():
 				index.append(i)
@@ -402,7 +402,7 @@ def save_frag_frequencies_txt(frag_frequencies, frag_frequencies_txt):
 			outfile.write('\n')
 
 def get_canonical_mapping(fragment):
-	gm = isomorphism.GraphMatcher(fragment, fragment, node_match=node_compare_element)
+	gm = isomorphism.GraphMatcher(fragment, fragment, node_match=node_compare_element, edge_match= lambda e1,e2: e1['order'] == e2['order'])
 
 	all_mappings = []
 

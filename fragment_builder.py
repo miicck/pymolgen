@@ -7,7 +7,7 @@ from networkx.algorithms import isomorphism
 
 from pymolgen.generate import SDFDatasetLargeRAM
 from pymolgen.molecule_formats import *
-from pymolgen.fragment_mol import print_fragments
+from pymolgen.fragment_mol import print_fragments, get_canonical_mapping
 
 def node_compare_element(node_1, node_2):
     return node_1["element"] == node_2["element"]
@@ -96,7 +96,7 @@ def find_fragment(fragment, fragment_database):
 
     for i in range(len(fragment_database)):
 
-        gm = isomorphism.GraphMatcher(fragment.graph, fragment_database[i].graph, node_match=node_compare_element)
+        gm = isomorphism.GraphMatcher(fragment.graph, fragment_database[i].graph, node_match=node_compare_element, edge_match= lambda e1,e2: e1['order'] == e2['order'])
 
         if gm.is_isomorphic():
 
@@ -104,7 +104,7 @@ def find_fragment(fragment, fragment_database):
 
     return False
 
-def get_random_neighbour(fragment_i, atom_i, fragment_bond_frequencies):
+def get_random_neighbour(fragment_i, fragment_bond_frequencies):
 
     keys = []
     vals = []
@@ -113,12 +113,8 @@ def get_random_neighbour(fragment_i, atom_i, fragment_bond_frequencies):
         keys.append(key)
         vals.append(val)
 
-    print('keys =', keys)
-    print('vals =', vals)
-
     draw = random.choices(population=keys, weights=vals, k=1)[0]
-    print('fragment_i', fragment_i)
-    print('draw =', draw)
+
     if fragment_i == draw[0]:
 
         new_frag_i = draw[1]
@@ -131,7 +127,7 @@ def get_random_neighbour(fragment_i, atom_i, fragment_bond_frequencies):
         fragment_i_atom = draw[3]
         new_frag_i_atom = draw[2]
 
-    return new_frag_i, fragment_i_atom, new_frag_i_atom
+    return new_frag_i, new_frag_i_atom
 
 def update_bond_frequencies(bond_frequencies, frag_mapping):
 
@@ -157,13 +153,39 @@ def get_length(list):
 
     return length
 
-def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file, remove_hydrogens, remove_hydrogens_parent_fragment):
+def reverse_canonical_mapping(fragment):
+    gm = isomorphism.GraphMatcher(fragment, fragment, node_match=node_compare_element, edge_match= lambda e1,e2: e1['order'] == e2['order'])
+
+    all_mappings = []
+
+    for mapping in gm.isomorphisms_iter():
+        all_mappings.append(mapping)
+
+    print(all_mappings)
+
+    canonical_mapping = all_mappings[0]
+
+    for i in all_mappings:
+        for key, val in i.items():
+            if canonical_mapping[key] > val:
+                canonical_mapping[key] = val
+
+    return canonical_mapping
+
+def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file, remove_hydrogens, remove_hydrogens_parent_fragment, outfile_name):
 
     #make databases and update atom numberings
     fragment_database = get_fragment_database(fragments_sdf)
     frag_mapping = get_frag_mapping(fragments_txt)
     bond_frequencies = get_bond_frequencies(frequencies_txt)   
     bond_frequencies = update_bond_frequencies(bond_frequencies, frag_mapping)
+
+    for key, val in bond_frequencies.items():
+        if key[0] == 4 and key[1] == 23:
+            print(key, val)
+
+    print_molecule(fragment_database[4])
+    print_molecule(fragment_database[23])
 
     mol = molecule_from_sdf(parent_file)
 
@@ -189,7 +211,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
     frag_free_valence_list.append([])
     print('parent_fragment')
     print_molecule(parent_fragment)
-    print(parent_fragment.free_valence_list)
+    print('parent_fragment.free_valence_list =', parent_fragment.free_valence_list)
     for i in parent_fragment.free_valence_list:
         frag_free_valence_list[0].append(i)
 
@@ -206,57 +228,63 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
         counter += 1
         if counter == 100: break
 
-        #choose random position of constituent fragments in molecule
+        # choose random position of constituent fragments in molecule
         i = random.randrange(len(frag_list))
 
-        #if chosen fragment has free valence points
+        # if chosen fragment has free valence points
         if len(frag_free_valence_list[i]) > 0:
 
             j = len(frag_list)
 
-            #get atom from fragment_i to build on
+            # get atom from fragment_i to build on
             atom_i = random.choice(frag_free_valence_list[i])
 
-            #get fragment_i (index in fragment_database)
+            # get fragment_i (index in fragment_database)
             fragment_i = frag_list[i]
 
-            #get bond frequencies for fragment_i
-            fragment_bond_frequencies = get_fragment_bond_frequencies(fragment_i, atom_i, bond_frequencies)
-            
-            #choose random neighbour
-            new_frag_i, fragment_i_atom, new_frag_i_atom = get_random_neighbour(fragment_i, atom_i, fragment_bond_frequencies)
-            print('neighbour =', new_frag_i, fragment_i_atom, new_frag_i_atom)
+            # get mol for fragment_i
+            fragment_i_mol = fragment_database[fragment_i]
 
-            #add neighbour index in fragment_database to frag_list
+            # get canonical mapping
+            canonical_mapping = get_canonical_mapping(fragment_i_mol.graph)
+
+            # get mapped atom_i since fragment_bond_frequencies are stored for canonical atoms
+            atom_i_can = canonical_mapping[atom_i]
+
+            # get bond frequencies for fragment_i
+            fragment_bond_frequencies = get_fragment_bond_frequencies(fragment_i, atom_i_can, bond_frequencies)
+            
+            # choose random neighbour
+            new_frag_i, new_frag_i_atom = get_random_neighbour(fragment_i, fragment_bond_frequencies)
+            print('neighbour =', new_frag_i, new_frag_i_atom)
+
+            # add neighbour index in fragment_database to frag_list
             frag_list.append(new_frag_i)
             print('updated frag list =', frag_list)
 
-            #generate molecule object from new_frag_i
+            # generate molecule object from new_frag_i
             new_frag = fragment_database[new_frag_i]
-
-            #add new fragment molecule object to frag_mol_list
-            #frag_mol_list.append(new_frag)
 
             print('new mol =', end=''); print_molecule(new_frag)
 
-            #get free valence points of new fragment
+            # get free valence points of new fragment
             new_free_valence_list = new_frag.free_valence_list
 
             print('new_frag_free_valence_list =', new_frag.free_valence_list)
 
-            #add bond betweent current fragment and new fragment to list of bonds between fragments (frag_bond_list)
-            frag_bond_list.append((i, j, fragment_i_atom, new_frag_i_atom))
+            # add bond betweent current fragment and new fragment to list of bonds between fragments (frag_bond_list)
+            frag_bond_list.append((i, j, atom_i, new_frag_i_atom))
+            print('frag_bond_list =', frag_bond_list)
 
-            #remove atom from current fragment making bond to new fragment from frag_free_valence_list[i]
-            print('fragment_i_atom', fragment_i_atom)
+            # remove atom from current fragment making bond to new fragment from frag_free_valence_list[i]
             print('frag_free_valence_list[i]', frag_free_valence_list[i])
-            frag_free_valence_list[i].remove(fragment_i_atom)
+            frag_free_valence_list[i].remove(atom_i)
 
-            #remove atom from new fragment making bond to current fragment from new fragment's list of free valence points
+            # remove atom from new fragment making bond to current fragment from new fragment's list of free valence points
             print('new_frag_i_atom =',  new_frag_i_atom)
             new_free_valence_list.remove(new_frag_i_atom)
 
-            #add new_free_valence_list to the list of available valence points in molecule being built
+            # add new_free_valence_list to the list of available valence points in molecule being built
             frag_free_valence_list.append(new_free_valence_list)
 
     print('frag_list =', frag_list)
@@ -274,9 +302,10 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
     lines = molecule_to_sdf(mol)
 
-    with open('mol.sdf', 'w') as outfile:
+    with open(outfile_name, 'w') as outfile:
         for line in lines:
             outfile.write(line)
+        outfile.write('$$$$')
 
 def combine_all_fragments(frag_mol_list, frag_list, frag_bond_list):
 
@@ -304,8 +333,8 @@ def combine_all_fragments(frag_mol_list, frag_list, frag_bond_list):
         l = bond[3]
         print(i,j,k,l)
 
-        k += added_frag_len_list[i-1]
-        l += added_frag_len_list[j-1]
+        k += added_frag_len_list[i]
+        l += added_frag_len_list[j]
 
         new_frag_bond_list.append((i,j,k,l))
 
@@ -373,9 +402,11 @@ def combine_two_fragments(
 
 if __name__ == '__main__':
 
-    random.seed(100)
+    #random.seed(100)
 
-    build_molecule('fragments10.sdf', 'fragments10.txt', 'frequencies10.txt', 'zgwhxzahbbyfix-26.sdf', 'methane.sdf', [26], [3])
+    outfile_name = sys.argv[1]
+
+    build_molecule('fragments10-2.sdf', 'fragments10-2.txt', 'frequencies10-2.txt', 'zgwhxzahbbyfix-26.sdf', 'methane.sdf', [26], [3], outfile_name)
 
 
 
