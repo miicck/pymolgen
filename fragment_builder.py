@@ -185,12 +185,6 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
     parent_mw = Molecule.molecular_weight(parent_mol)
 
-    #prepare parent fragment
-    frag_list = []
-    frag_mol_list = [parent_mol]
-    frag_bond_list = []
-    frag_free_valence_list = []
-
     parent_fragment = molecule_from_sdf(parent_fragment_file)
 
     for i in remove_hydrogens_parent_fragment:
@@ -198,7 +192,28 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
     parent_fragment_i = find_fragment(parent_fragment, fragment_database)
 
+    if parent_fragment_i is False:
+        sys.exit('Parent fragment not found')
+
     parent_fragment = fragment_database[parent_fragment_i]
+
+    mol = build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies)
+
+    lines = molecule_to_sdf(mol)
+
+    with open(outfile_name, 'w') as outfile:
+        for line in lines:
+            outfile.write(line)
+
+        outfile.write('$$$$')    
+
+def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies):
+
+    #prepare parent fragment
+    frag_list = []
+    frag_mol_list = [parent_mol]
+    frag_bond_list = []
+    frag_free_valence_list = []
 
     frag_free_valence_list.append([])
     print('parent_fragment')
@@ -207,9 +222,6 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
     for i in parent_mol.free_valence_list:
         frag_free_valence_list[0].append(i)
-
-    if parent_fragment_i is False:
-        sys.exit('Parent fragment not found')
 
     frag_list.append(-1)
 
@@ -287,14 +299,8 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
     mol = combine_all_fragments(frag_mol_list, frag_list, frag_bond_list)
 
-    lines = molecule_to_sdf(mol)
 
-    with open(outfile_name, 'w') as outfile:
-        for line in lines:
-            outfile.write(line)
-
-        outfile.write('$$$$')
-
+    return mol
 
 def combine_all_fragments(frag_mol_list, frag_list, frag_bond_list):
 
