@@ -113,6 +113,9 @@ def get_random_neighbour(fragment_i, fragment_bond_frequencies):
         keys.append(key)
         vals.append(val)
 
+    if len(fragment_bond_frequencies) == 0:
+        print('fragment bond frequencies =', fragment_bond_frequencies)
+        print('fragment_i =', fragment_i)
     draw = random.choices(population=keys, weights=vals, k=1)[0]
 
     if fragment_i == draw[0]:
@@ -170,7 +173,7 @@ def reverse_canonical_mapping(fragment):
 
     return canonical_mapping
 
-def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file, remove_hydrogens, remove_hydrogens_parent_fragment, parent_mapping, outfile_name):
+def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file, remove_hydrogens, remove_hydrogens_parent_fragment, parent_mapping, outfile_name, n_mol):
 
     #make databases and update atom numberings
     fragment_database = get_fragment_database(fragments_sdf)
@@ -197,15 +200,29 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
     parent_fragment = fragment_database[parent_fragment_i]
 
-    mol = build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies)
-
-    lines = molecule_to_sdf(mol)
+    print('parent_fragment')
+    print_molecule(parent_fragment)
+    print('parent_fragment.free_valence_list =', parent_fragment.free_valence_list)
 
     with open(outfile_name, 'w') as outfile:
-        for line in lines:
-            outfile.write(line)
+        print('Writing to', outfile_name)
 
-        outfile.write('$$$$')    
+    n = 0
+    while n < n_mol:
+
+        mol = build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies)
+
+        if mol is not None:
+
+            lines = molecule_to_sdf(mol)
+
+            with open(outfile_name, 'a') as outfile:
+                for line in lines:
+                    outfile.write(line)
+
+                outfile.write('$$$$\n')
+
+            n += 1
 
 def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies):
 
@@ -216,9 +233,6 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
     frag_free_valence_list = []
 
     frag_free_valence_list.append([])
-    print('parent_fragment')
-    print_molecule(parent_fragment)
-    print('parent_fragment.free_valence_list =', parent_fragment.free_valence_list)
 
     for i in parent_mol.free_valence_list:
         frag_free_valence_list[0].append(i)
@@ -229,7 +243,8 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
     while get_length(frag_free_valence_list) != 0:
 
         counter += 1
-        if counter == 100: break
+        if counter == 100:
+            return None
 
         # choose random position of constituent fragments in molecule
         i = random.randrange(len(frag_list))
@@ -268,8 +283,15 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
             # get bond frequencies for fragment_i
             fragment_bond_frequencies = get_fragment_bond_frequencies(fragment_i, atom_i_can, bond_frequencies)
 
+            # return none molecule if fragment_bond_frequencies has length 0 (cannot build on fragment)
+            # this shouldn't happen since all fragments come from molecules so they shuold all have bonds
+            # but there could be errors in the database
+            if len(fragment_bond_frequencies) == 0:
+                return None
+
             if fragment_i == -1:
                 print_molecule(fragment_database[fragment_i])
+
             # choose random neighbour
             new_frag_i, new_frag_i_atom = get_random_neighbour(fragment_i, fragment_bond_frequencies)
 
@@ -298,7 +320,6 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
         frag_mol_list.append(fragment_database[i])
 
     mol = combine_all_fragments(frag_mol_list, frag_list, frag_bond_list)
-
 
     return mol
 
@@ -339,11 +360,11 @@ def combine_all_fragments(frag_mol_list, frag_list, frag_bond_list):
 
 if __name__ == '__main__':
 
-    #random.seed(100)
+    random.seed(100)
 
     outfile_name = sys.argv[1]
 
-    build_molecule('fragments.sdf', 'fragments.txt', 'frequencies.txt', 'zgwhxzahbbyfix-26.sdf', 'ammonia-3.sdf', [26], [3], {5:2}, outfile_name)
+    build_molecule('fragments.sdf', 'fragments.txt', 'frequencies.txt', 'zgwhxzahbbyfix-26.sdf', 'ammonia-3.sdf', [26], [3], {5:2}, outfile_name, 100)
 
 
 
