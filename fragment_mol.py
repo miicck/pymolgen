@@ -330,7 +330,7 @@ def make_fragment_database(database_file, fragments_sdf=None, fragments_txt=None
 		if verbose: print('%s ' %counter, end='', flush=True)
 
 		if counter % 100 == 0: 
-			print()
+			if verbose: print()
 			print('TIME', counter, time.time() - t0, flush=True)
 			t0 = time.time()
 
@@ -439,3 +439,4 @@ if __name__ == '__main__':
 	frag_frequencies_txt = sys.argv[5]
 
 	make_fragment_database(database_file, fragments_sdf, fragments_txt, frequencies_txt, frag_frequencies_txt)
+	print('Normal termination')
