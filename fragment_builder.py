@@ -434,7 +434,7 @@ if __name__ == '__main__':
 
     outfile_name = sys.argv[1]
 
-    build_molecule('fragments.sdf', 'fragments.txt', 'frequencies.txt', 'isoxazole-13.sdf', 'methane.sdf', [13], [4], {5:2}, outfile_name, 100, filters=True, unique=True, figure='fig.sdf')
+    build_molecule('fragments.sdf', 'fragments.txt', 'frequencies.txt', 'isoxazole-5.sdf', 'methane.sdf', [13], [5,6,7], {5:2}, outfile_name, 100, filters=True, unique=True, figure='fig.sdf')
 
 
 
