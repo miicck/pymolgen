@@ -238,7 +238,9 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
             if figure is not None:
 
-                fig = mol.get_fragment([44:])
+                newatoms = [i for i in mol.nodes[44:]]
+
+                fig = mol.get_fragment()
                 fig.hydrogenate()
                 smi = molecule_to_smiles(fig)
                 print('ATTACHED ', smi)
