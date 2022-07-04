@@ -414,7 +414,7 @@ if __name__ == '__main__':
 
     outfile_name = sys.argv[1]
 
-    build_molecule('fragments.sdf', 'fragments.txt', 'frequencies.txt', 'zgwhxzahbbyfix-26.sdf', 'zgwhxzahbbyfix-26-amide-6.sdf', [26], [6], {5:2}, outfile_name, 100, filters=True, unique=True)
+    build_molecule('fragments.sdf', 'fragments.txt', 'frequencies.txt', 'zgwhxzahbbyfix-26.sdf', 'zgwhxzahbbyfix-26-amide-6.sdf', [26], [6], {5:2}, outfile_name, 100, filters=True, unique=True, figure='fig.sdf')
 
 
 
