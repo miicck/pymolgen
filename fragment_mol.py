@@ -412,7 +412,7 @@ def map_mols(mol1, mol2):
 
 	print(all_mappings)
 
-	mapping = all_mappings[0]
+	mapping = all_mappings
 
 	print(mapping)
 

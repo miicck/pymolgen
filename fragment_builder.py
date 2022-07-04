@@ -202,8 +202,6 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
     parent_fragment = molecule_from_sdf(parent_fragment_file)
 
-    parent_fragment_original = parent_fragment
-
     smi = molecule_to_smiles(parent_fragment)
 
     print('Parent fragment', smi)
@@ -211,12 +209,17 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
     for i in remove_hydrogens_parent_fragment:
         parent_fragment = parent_fragment.remove_atom(i)
 
+    parent_fragment_original = parent_fragment
+
     parent_fragment_i = find_fragment(parent_fragment, fragment_database)
 
     if parent_fragment_i is False:
         sys.exit('Parent fragment not found')
 
     parent_fragment = fragment_database[parent_fragment_i]
+
+    print_molecule(parent_fragment_original)
+    print_molecule(parent_fragment)
 
     mapping = map_mols(parent_fragment_original.graph, parent_fragment.graph)
 
@@ -314,7 +317,7 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
                 fragment_i_mol = fragment_database[fragment_i]
 
                 # get mapped atom_i since fragment_bond_frequencies are stored for canonical atoms
-                atom_i_can = 0
+                atom_i_can = 4
 
 
             else:
@@ -438,7 +441,7 @@ if __name__ == '__main__':
 
     outfile_name = sys.argv[1]
 
-    build_molecule('fragments.sdf', 'fragments.txt', 'frequencies.txt', 'isoxazole-13.sdf', 'isoxazole-5.sdf', [13], [5,6,7], {5:2}, outfile_name, 100, filters=True, unique=True, figure='fig.sdf')
+    build_molecule('fragments.sdf', 'fragments.txt', 'frequencies.txt', 'isoxazole-13.sdf', 'isoxazole-5.sdf', [13], [5,6,7], {5:2}, outfile_name, 100, filters=False, unique=True, figure='fig.sdf')
 
 
 
