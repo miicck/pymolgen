@@ -366,6 +366,7 @@ def filters_additive_mol(mol):
 
     # generate openeye molecule and run filters on it
     #try:
+    # this seems to send warning 'OEGraphMol' object has no attribute 'graph' but seems to work
     oemol = oechem.OEGraphMol()
     oechem.OESmilesToMol(oemol, smi)
 
