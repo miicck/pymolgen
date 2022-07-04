@@ -418,7 +418,7 @@ def filters_final_mol(mol, pains_database):
 
     oechem.OEAddExplicitHydrogens(oemol)
 
-    filters_additive_pass, n_rot_bonds = filters_additive(oemol)
+    filters_additive_pass, n_rot_bonds = filters_additive(oemol, smi)
 
     if filters_additive_pass == False:
         return False
