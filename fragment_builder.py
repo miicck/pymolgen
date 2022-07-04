@@ -248,7 +248,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
                         newatoms.append(i)
 
                 fig = mol.get_fragment(newatoms)
-                fig.hydrogenate()
+                #fig.hydrogenate()
                 smi = molecule_to_smiles(fig)
                 print('ATTACHED ', smi)
 
