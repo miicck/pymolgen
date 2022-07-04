@@ -173,7 +173,15 @@ def reverse_canonical_mapping(fragment):
 
     return canonical_mapping
 
-def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file, remove_hydrogens, remove_hydrogens_parent_fragment, parent_mapping, outfile_name, n_mol):
+def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file, remove_hydrogens, remove_hydrogens_parent_fragment, parent_mapping, outfile_name, n_mol, filters=False):
+
+    # build pains_database if using filters
+    if filters:
+        from pymolgen.newmol import gen_pains_database, filters_final_mol
+        try:
+            pains_database = gen_pains_database()
+        except:
+            raise Exception("Could not generate pains database")
 
     #make databases and update atom numberings
     fragment_database = get_fragment_database(fragments_sdf)
@@ -212,7 +220,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
     n = 0
     while n < n_mol:
 
-        mol = build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies)
+        mol = build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, filters, pains_database)
 
         if mol is not None:
 
@@ -226,7 +234,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
             n += 1
 
-def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies):
+def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, filters=False, pains_database=None):
 
     #prepare parent fragment
     frag_list = []
@@ -323,6 +331,11 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
 
     mol = combine_all_fragments(frag_mol_list, frag_list, frag_bond_list)
 
+    if filters:
+        filter_pass = filters_final_mol(mol, pains_database)
+        if filter_pass is False:
+            return None
+
     return mol
 
 def combine_all_fragments(frag_mol_list, frag_list, frag_bond_list):
@@ -366,7 +379,7 @@ if __name__ == '__main__':
 
     outfile_name = sys.argv[1]
 
-    build_molecule('fragments.sdf', 'fragments.txt', 'frequencies.txt', 'zgwhxzahbbyfix-26.sdf', 'zgwhxzahbbyfix-26-amide-6.sdf', [26], [6], {5:2}, outfile_name, 100)
+    build_molecule('fragments.sdf', 'fragments.txt', 'frequencies.txt', 'zgwhxzahbbyfix-26.sdf', 'zgwhxzahbbyfix-26-amide-6.sdf', [26], [6], {5:2}, outfile_name, 100, filters=True)
 
 
 

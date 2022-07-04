@@ -424,6 +424,8 @@ def filters_final_mol(mol, pains_database):
         #    print("Failed filters_additive")
         #    return False
 
+        filters_additive_pass, n_rot_bonds = filters_additive_mol(oemol)
+
         filters_final_pass = filters_final(oemol, smi, pains_database)
         if filters_final_pass == False:
             return False
