@@ -362,6 +362,11 @@ def filters_additive_mol(mol):
         The number of rotatatable bonds in the molecule (if pass)
     """
 
+    mw = mol.molecular_weight()
+
+    if mw > WEIGHT_THRESHOLD:
+        return False, 0
+
     smi = molecule_to_smiles(mol)
 
     # generate openeye molecule and run filters on it

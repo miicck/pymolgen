@@ -337,6 +337,9 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
         if filter_pass is False:
             return None
 
+    smi = molecule_to_smiles(mol)
+    print('NEW_CANDIDATE %s' % (smi))
+
     return mol
 
 def combine_all_fragments(frag_mol_list, frag_list, frag_bond_list):
