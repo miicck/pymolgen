@@ -338,6 +338,7 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
             candidate_list.append(frag_list)
             candidate_bond_list.append(frag_bond_list)
         else:
+            print("Not unique")
             return None
 
 
