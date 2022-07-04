@@ -409,7 +409,7 @@ def filters_final(oemol, smi, pains_database):
 
 
 def filters_final_mol(mol, pains_database):
-
+    print(mol)
     smi = molecule_to_smiles(mol)
 
     # generate openeye molecule and run filters on it
