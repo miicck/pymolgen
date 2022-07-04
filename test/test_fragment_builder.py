@@ -61,7 +61,7 @@ def test_filters_final_mol():
     print(mol)
     smi = molecule_to_smiles(mol)
     print(smi)
-    print(filters_final_mol(mol, pains_database))
+    print(filters_final_mol(smi, pains_database))
 
 
 test_filters_final_mol()
