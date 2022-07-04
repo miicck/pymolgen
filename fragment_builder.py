@@ -202,6 +202,10 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
     parent_fragment = molecule_from_sdf(parent_fragment_file)
 
+    smi = molecule_to_smiles(parent_fragment)
+
+    print('Parent fragment', smi)
+
     for i in remove_hydrogens_parent_fragment:
         parent_fragment = parent_fragment.remove_atom(i)
 
