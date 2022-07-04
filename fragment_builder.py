@@ -224,7 +224,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
     n = 0
     while n < n_mol:
 
-        mol = build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, filters, pains_database)
+        mol = build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, filters, pains_database, candidate_list, candidate_bond_list)
 
         if mol is not None:
 
