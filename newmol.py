@@ -413,30 +413,28 @@ def filters_final_mol(mol, pains_database):
     smi = molecule_to_smiles(mol)
 
     # generate openeye molecule and run filters on it
-    try:
-        oemol = oechem.OEGraphMol()
-        oechem.OESmilesToMol(oemol, smi)
+    #try:
+    oemol = oechem.OEGraphMol()
+    oechem.OESmilesToMol(oemol, smi)
 
-        oechem.OEAddExplicitHydrogens(oemol)
+    oechem.OEAddExplicitHydrogens(oemol)
 
-        #removed here because test carried out as you build molecule so it'll never fail
-        #filters_additive_pass, n_not_bonds = filters_additive(oemol, smi, pains_database)
-        #if filters_additive_pass == False:
-        #    print("Failed filters_additive")
-        #    return False
+    filters_additive_pass, n_rot_bonds = filters_additive_mol(oemol)
 
-        filters_additive_pass, n_rot_bonds = filters_additive_mol(oemol)
-
-        filters_final_pass = filters_final(oemol, smi, pains_database)
-        if filters_final_pass == False:
-            return False
-
-        return True
-
-    except Exception as e:
-        print("filters_final_mol failed with ", smi)
-        print(e)
+    if filters_additive_pass == False:
         return False
+
+    filters_final_pass = filters_final(oemol, smi, pains_database)
+
+    if filters_final_pass == False:
+        return False
+
+    return True
+
+    #except Exception as e:
+    #    print("filters_final_mol failed with ", smi)
+    #    print(e)
+    #    return False
 
 
 def newmol_mw_attachment_points_loop(dataset_path, parent_file, remove_hydrogens, outfile_name, n_mol, max_mw=500,
