@@ -200,6 +200,8 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
     parent_fragment = fragment_database[parent_fragment_i]
 
+    print(get_fragment_bond_frequencies(parent_fragment_i, 7, bond_frequencies))
+
     print('parent_fragment')
     print_molecule(parent_fragment)
     print('parent_fragment.free_valence_list =', parent_fragment.free_valence_list)
@@ -267,7 +269,7 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
                 fragment_i_mol = fragment_database[fragment_i]
 
                 # get mapped atom_i since fragment_bond_frequencies are stored for canonical atoms
-                atom_i_can = 1
+                atom_i_can = 7
 
 
             else:
@@ -364,7 +366,7 @@ if __name__ == '__main__':
 
     outfile_name = sys.argv[1]
 
-    build_molecule('fragments.sdf', 'fragments.txt', 'frequencies.txt', 'zgwhxzahbbyfix-26.sdf', 'ammonia-3.sdf', [26], [3], {5:2}, outfile_name, 100)
+    build_molecule('fragments.sdf', 'fragments.txt', 'frequencies.txt', 'zgwhxzahbbyfix-26.sdf', 'zgwhxzahbbyfix-26-amide-6.sdf', [26], [6], {5:2}, outfile_name, 100)
 
 
 
