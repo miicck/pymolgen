@@ -173,7 +173,7 @@ def reverse_canonical_mapping(fragment):
 
     return canonical_mapping
 
-def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file, remove_hydrogens, remove_hydrogens_parent_fragment, parent_mapping, outfile_name, n_mol, filters=False):
+def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file, remove_hydrogens, remove_hydrogens_parent_fragment, parent_mapping, outfile_name, n_mol, filters=False, unique=False):
 
     # build pains_database if using filters
     if filters:
@@ -188,6 +188,10 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
     frag_mapping = get_frag_mapping(fragments_txt)
     bond_frequencies = get_bond_frequencies(frequencies_txt)   
     bond_frequencies = update_bond_frequencies(bond_frequencies, frag_mapping)
+
+    if unique:
+        candidate_list = []
+        candidate_bond_list = []
 
     parent_mol = molecule_from_sdf(parent_file)
 
@@ -234,7 +238,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
             n += 1
 
-def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, filters=False, pains_database=None):
+def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, filters=False, pains_database=None, candidate_list=None, candidate_bond_list=None):
 
     #prepare parent fragment
     frag_list = []
@@ -329,6 +333,14 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
     for i in frag_list[1:]:
         frag_mol_list.append(fragment_database[i])
 
+    if candidate_list is not None:
+        if is_new_candidate(frag_list, frag_bond_list, candidate_list, candidate_bond_list) is True:
+            candidate_list.append(frag_list)
+            candidate_bond_list.append(frag_bond_list)
+        else:
+            return None
+
+
     mol = combine_all_fragments(frag_mol_list, frag_list, frag_bond_list)
 
     if filters:
@@ -342,6 +354,15 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
     print('NEW_CANDIDATE %s %s' % (smi, mw))
 
     return mol
+
+def is_new_candidate(frag_list, frag_bond_list, candidate_list, candidate_bond_list):
+
+    for i in range(len(candidate_list)):
+        if frag_list == candidate_list[i]:
+            if frag_bond_list == candidate_bond_list[i]:
+                return False
+
+    return True
 
 def combine_all_fragments(frag_mol_list, frag_list, frag_bond_list):
 
@@ -384,7 +405,7 @@ if __name__ == '__main__':
 
     outfile_name = sys.argv[1]
 
-    build_molecule('fragments.sdf', 'fragments.txt', 'frequencies.txt', 'zgwhxzahbbyfix-26.sdf', 'zgwhxzahbbyfix-26-amide-6.sdf', [26], [6], {5:2}, outfile_name, 100, filters=True)
+    build_molecule('fragments.sdf', 'fragments.txt', 'frequencies.txt', 'zgwhxzahbbyfix-26.sdf', 'zgwhxzahbbyfix-26-amide-6.sdf', [26], [6], {5:2}, outfile_name, 100, filters=True, unique=True)
 
 
 
