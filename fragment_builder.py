@@ -218,7 +218,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
     parent_fragment = fragment_database[parent_fragment_i]
 
-    mapping = map_mols(parent_fragment_original, parent_fragment)
+    mapping = map_mols(parent_fragment_original.graph, parent_fragment.graph)
 
     print(get_fragment_bond_frequencies(parent_fragment_i, 7, bond_frequencies))
 
