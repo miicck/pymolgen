@@ -31,21 +31,21 @@ print = partial(print, flush=True)
 
 #   CHIRAL_THRESHOLD:   Maximum number of Chiral Centers (<= 2)
 CHIRAL_THRESHOLD = 2
-#   PSA_TRESHOLD:       Polar surface area (<= 140)
-PSA_TRESHOLD = 140
-#   PFI_TRESHOLD:       Property Forecast Index (LOGP + # of aromatic rings < 8)
-PFI_TRESHOLD = 8
+#   PSA_THRESHOLD:       Polar surface area (<= 140)
+PSA_THRESHOLD = 140
+#   PFI_THRESHOLD:       Property Forecast Index (LOGP + # of aromatic rings < 8)
+PFI_THRESHOLD = 8
 #   ROTBOND_THRESHOLD:  Number of rotatable bonds (<= 7)
 ROTBOND_THRESHOLD = 7
-#   WEIGHT_TRESHOLD:    Maximum MW in Daltons (<= 500)
-WEIGHT_TRESHOLD = 500
-#   H_DON_TRESHOLD:     Maximum number of hydrogen donors (<= 5)
-H_DON_TRESHOLD = 5
-#   H_ACC_TRESHOLD:     Maximum number of hydrogen acceptors (<= 10)
-H_ACC_TRESHOLD = 10
-#   LOGP_TRESHOLD:      Water/Octanol Partition Coefficient (0.5-5.0)
-LOGP_TRESHOLD_UP = 5
-LOGP_TRESHOLD_LOW = 0.5
+#   WEIGHT_THRESHOLD:    Maximum MW in Daltons (<= 500)
+WEIGHT_THRESHOLD = 500
+#   H_DON_THRESHOLD:     Maximum number of hydrogen donors (<= 5)
+H_DON_THRESHOLD = 5
+#   H_ACC_THRESHOLD:     Maximum number of hydrogen acceptors (<= 10)
+H_ACC_THRESHOLD = 10
+#   LOGP_THRESHOLD:      Water/Octanol Partition Coefficient (0.5-5.0)
+LOGP_THRESHOLD_UP = 5
+LOGP_THRESHOLD_LOW = 0.5
 
 
 def newmol(parent_file):
@@ -331,13 +331,13 @@ def filters_additive(oemol, smi):
 
     h_don = num_lipinsky_donors(oemol)
 
-    if h_don > H_DON_TRESHOLD:
+    if h_don > H_DON_THRESHOLD:
         print("Failed h_don filter", smi)
         return (False, n_rot_bonds)
 
     h_acc = num_lipinsky_acceptors(oemol)
 
-    if h_acc > H_ACC_TRESHOLD:
+    if h_acc > H_ACC_THRESHOLD:
         print("Failed h_acc filter", smi)
         return (False, n_rot_bonds)
 
@@ -385,11 +385,11 @@ def filters_final(oemol, smi, pains_database):
 
     logp, PSA = oeMolProp(oemol)
 
-    if logp > LOGP_TRESHOLD_UP or logp < LOGP_TRESHOLD_LOW:
+    if logp > LOGP_THRESHOLD_UP or logp < LOGP_THRESHOLD_LOW:
         print("Failed logP filter", smi)
         return False
 
-    if PSA > PSA_TRESHOLD:
+    if PSA > PSA_THRESHOLD:
         print("Failed PSA filter", smi)
         return False
 
@@ -397,7 +397,7 @@ def filters_final(oemol, smi, pains_database):
 
     PFI = n_aromatic_rings + logp
 
-    if PFI > PFI_TRESHOLD:
+    if PFI > PFI_THRESHOLD:
         print("Failed PFI filter", smi)
         return False
 
