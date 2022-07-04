@@ -58,6 +58,7 @@ def test_filters_final_mol():
     print(mol)
     from pymolgen.newmol import filters_additive, gen_pains_database, filters_final_mol
     pains_database = gen_pains_database()
+    print(mol)
     print(filters_final_mol(mol, pains_database))
 
 
