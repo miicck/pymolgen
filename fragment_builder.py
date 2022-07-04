@@ -173,7 +173,7 @@ def reverse_canonical_mapping(fragment):
 
     return canonical_mapping
 
-def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file, remove_hydrogens, remove_hydrogens_parent_fragment, parent_mapping, outfile_name, n_mol, filters=False, unique=False):
+def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file, remove_hydrogens, remove_hydrogens_parent_fragment, parent_mapping, outfile_name, n_mol, filters=False, unique=False, figure=None):
 
     # build pains_database if using filters
     if filters:
@@ -224,7 +224,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
     n = 0
     while n < n_mol:
 
-        mol = build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, filters, pains_database, candidate_list, candidate_bond_list)
+        mol = build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, filters, pains_database, candidate_list, candidate_bond_list, figure)
 
         if mol is not None:
 
@@ -236,9 +236,16 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
                 outfile.write('$$$$\n')
 
+            if figure is not None:
+
+                fig = mol.get_fragment([44:])
+                fig.hydrogenate()
+                smi = molecule_to_smiles(fig)
+                print('ATTACHED ', smi)
+
             n += 1
 
-def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, filters=False, pains_database=None, candidate_list=None, candidate_bond_list=None):
+def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, filters=False, pains_database=None, candidate_list=None, candidate_bond_list=None, figure=None):
 
     #prepare parent fragment
     frag_list = []
@@ -340,7 +347,6 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
         else:
             print("Not unique")
             return None
-
 
     mol = combine_all_fragments(frag_mol_list, frag_list, frag_bond_list)
 
