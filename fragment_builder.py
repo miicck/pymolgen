@@ -177,7 +177,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
     # build pains_database if using filters
     if filters:
-        from pymolgen.newmol import gen_pains_database, filters_final_mol
+        from pymolgen.newmol import gen_pains_database
         try:
             pains_database = gen_pains_database()
         except:
@@ -332,6 +332,7 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
     mol = combine_all_fragments(frag_mol_list, frag_list, frag_bond_list)
 
     if filters:
+        from pymolgen.newmol import filters_final_mol
         filter_pass = filters_final_mol(mol, pains_database)
         if filter_pass is False:
             return None
