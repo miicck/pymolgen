@@ -221,6 +221,10 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
     with open(outfile_name, 'w') as outfile:
         print('Writing to', outfile_name)
 
+    if figure is not None:
+        with open(figure, 'w') as outfile:
+            print('Writing to figure', figure)
+
     n = 0
     while n < n_mol:
 
@@ -240,7 +244,6 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
                 newatoms = []
                 for i in mol.graph.nodes:
-                    print(i)
                     if i >= 44:
                         newatoms.append(i)
 
@@ -248,6 +251,14 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
                 fig.hydrogenate()
                 smi = molecule_to_smiles(fig)
                 print('ATTACHED ', smi)
+
+                lines = molecule_to_sdf(fig)
+
+                with open(figure, 'a') as outfile:
+                    for line in lines:
+                        outfile.write(line)
+
+                    outfile.write('$$$$\n')               
 
             n += 1
 
