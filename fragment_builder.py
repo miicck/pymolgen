@@ -7,7 +7,7 @@ from networkx.algorithms import isomorphism
 
 from pymolgen.generate import SDFDatasetLargeRAM
 from pymolgen.molecule_formats import *
-from pymolgen.fragment_mol import print_fragments, get_canonical_mapping
+from pymolgen.fragment_mol import print_fragments, get_canonical_mapping, map_mols
 
 def node_compare_element(node_1, node_2):
     return node_1["element"] == node_2["element"]
