@@ -339,7 +339,7 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
 
     smi = molecule_to_smiles(mol)
     mw = mol.molecular_weight()
-    print('NEW_CANDIDATE %s' % (smi, mw))
+    print('NEW_CANDIDATE %s %s' % (smi, mw))
 
     return mol
 
