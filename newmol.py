@@ -320,25 +320,25 @@ def filters_additive(oemol, smi):
     n_rot_bonds = num_rot_bond(oemol)
 
     if n_rot_bonds > ROTBOND_THRESHOLD:
-        #print("Failed n_rot_bonds filter", smi)
+        print("Failed n_rot_bonds filter", smi)
         return (False, n_rot_bonds)
 
     n_chiral = num_chiral_centres(oemol)
 
     if n_chiral > 2:
-        #print("Failed n_chiral filter", smi)
+        print("Failed n_chiral filter", smi)
         return (False, n_rot_bonds)
 
     h_don = num_lipinsky_donors(oemol)
 
     if h_don > H_DON_TRESHOLD:
-        #print("Failed h_don filter", smi)
+        print("Failed h_don filter", smi)
         return (False, n_rot_bonds)
 
     h_acc = num_lipinsky_acceptors(oemol)
 
     if h_acc > H_ACC_TRESHOLD:
-        #print("Failed h_acc filter", smi)
+        print("Failed h_acc filter", smi)
         return (False, n_rot_bonds)
 
     return (True, n_rot_bonds)
@@ -364,10 +364,11 @@ def filters_additive_mol(mol):
 
     mw = mol.molecular_weight()
 
-    if mw > WEIGHT_THRESHOLD:
-        return False, 0
-
     smi = molecule_to_smiles(mol)
+
+    if mw > WEIGHT_THRESHOLD:
+        print("Failed MW filter", smi)
+        return False, 0    
 
     # generate openeye molecule and run filters on it
     #try:
