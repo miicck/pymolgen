@@ -405,7 +405,13 @@ def map_mols(mol1, mol2):
 
 	gm = isomorphism.GraphMatcher(mol1, mol2, node_match=node_compare_element, edge_match= lambda e1,e2: e1['order'] == e2['order'])
 
-	mappping = gm.isomorphisms_iter()[0]
+	all_mappings = []
+
+	for i in gm.isomorphisms_iter():
+		all_mappings.append(i)
+
+	mapping = all_mappings[0]
+
 	print(mapping)
 
 	return mapping
