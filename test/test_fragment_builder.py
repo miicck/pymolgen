@@ -55,11 +55,8 @@ def test_filters_additive_mol():
 def test_filters_final_mol():
 
     mol = molecule_from_sdf('../datasets/sdf/mol-1.sdf')
-    print(mol)
     from pymolgen.newmol import filters_additive, gen_pains_database, filters_final_mol
     pains_database = gen_pains_database()
-    print(mol)
-    print(smi)
     print(filters_final_mol(mol, pains_database))
 
 
