@@ -310,7 +310,7 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
                 fragment_i_mol = fragment_database[fragment_i]
 
                 # get mapped atom_i since fragment_bond_frequencies are stored for canonical atoms
-                atom_i_can = 2
+                atom_i_can = 0
 
 
             else:
