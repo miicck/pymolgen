@@ -202,6 +202,8 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
     parent_fragment = molecule_from_sdf(parent_fragment_file)
 
+    parent_fragment_original = parent_fragment
+
     smi = molecule_to_smiles(parent_fragment)
 
     print('Parent fragment', smi)
@@ -215,6 +217,8 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
         sys.exit('Parent fragment not found')
 
     parent_fragment = fragment_database[parent_fragment_i]
+
+    mapping = map_mols(parent_fragment_original, parent_fragment)
 
     print(get_fragment_bond_frequencies(parent_fragment_i, 7, bond_frequencies))
 

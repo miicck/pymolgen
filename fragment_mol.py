@@ -401,6 +401,15 @@ def save_frag_frequencies_txt(frag_frequencies, frag_frequencies_txt):
 				if i + 1 % 10 == 0: outfile.write('\n')
 			outfile.write('\n')
 
+def map_mols(mol1, mol2):
+
+	gm = isomorphism.GraphMatcher(fragment, fragment, node_match=node_compare_element, edge_match= lambda e1,e2: e1['order'] == e2['order'])
+
+	mappping = gm.isomorphisms_iter()[0]
+	print(mapping)
+
+	return mapping
+
 def get_canonical_mapping(fragment):
 	gm = isomorphism.GraphMatcher(fragment, fragment, node_match=node_compare_element, edge_match= lambda e1,e2: e1['order'] == e2['order'])
 
