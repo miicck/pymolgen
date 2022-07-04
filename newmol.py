@@ -365,19 +365,19 @@ def filters_additive_mol(mol):
     smi = molecule_to_smiles(mol)
 
     # generate openeye molecule and run filters on it
-    try:
-        oemol = oechem.OEGraphMol()
-        oechem.OESmilesToMol(oemol, smi)
+    #try:
+    oemol = oechem.OEGraphMol()
+    oechem.OESmilesToMol(oemol, smi)
 
-        oechem.OEAddExplicitHydrogens(oemol)
+    oechem.OEAddExplicitHydrogens(oemol)
 
-        filters_additive_pass, n_rot_bonds = filters_additive(oemol, smi)
-        #print("filters_additive_pass =", filters_additive_pass, "n_rot_bonds = ", n_rot_bonds)
-        return (filters_additive_pass, n_rot_bonds)
+    filters_additive_pass, n_rot_bonds = filters_additive(oemol, smi)
+    #print("filters_additive_pass =", filters_additive_pass, "n_rot_bonds = ", n_rot_bonds)
+    return (filters_additive_pass, n_rot_bonds)
 
-    except:
-        raise Exception("filters_additive_mol failed with ", smi)
-        return (False, 0)
+    #except:
+    #    raise Exception("filters_additive_mol failed with ", smi)
+    #    return (False, 0)
 
 
 def filters_final(oemol, smi, pains_database):
