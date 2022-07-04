@@ -437,7 +437,7 @@ def combine_all_fragments(frag_mol_list, frag_list, frag_bond_list):
 
 if __name__ == '__main__':
 
-    random.seed(100)
+    random.seed(1000)
 
     outfile_name = sys.argv[1]
 
