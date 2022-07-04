@@ -238,9 +238,11 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
             if figure is not None:
 
+                newatoms = []
                 for i in mol.graph.nodes:
                     print(i)
-                    newatoms = [i for i in mol.graph.nodes[44:]]
+                    if i >= 44:
+                        newatoms.append(i)
 
                 fig = mol.get_fragment(newatoms)
                 fig.hydrogenate()
