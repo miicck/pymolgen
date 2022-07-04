@@ -403,7 +403,7 @@ def save_frag_frequencies_txt(frag_frequencies, frag_frequencies_txt):
 
 def map_mols(mol1, mol2):
 
-	gm = isomorphism.GraphMatcher(fragment, fragment, node_match=node_compare_element, edge_match= lambda e1,e2: e1['order'] == e2['order'])
+	gm = isomorphism.GraphMatcher(mol1, mol2, node_match=node_compare_element, edge_match= lambda e1,e2: e1['order'] == e2['order'])
 
 	mappping = gm.isomorphisms_iter()[0]
 	print(mapping)
