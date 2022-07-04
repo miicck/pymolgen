@@ -232,7 +232,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
     n = 0
     while n < n_mol:
 
-        mol = build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, filters, pains_database, candidate_list, candidate_bond_list, figure)
+        mol = build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, parent_mapping, filters, pains_database, candidate_list, candidate_bond_list, figure)
 
         if mol is not None:
 
@@ -266,7 +266,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
             n += 1
 
-def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, filters=False, pains_database=None, candidate_list=None, candidate_bond_list=None, figure=None):
+def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, parent_mapping, filters=False, pains_database=None, candidate_list=None, candidate_bond_list=None, figure=None):
 
     #prepare parent fragment
     frag_list = []
@@ -309,7 +309,7 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
                 fragment_i_mol = fragment_database[fragment_i]
 
                 # get mapped atom_i since fragment_bond_frequencies are stored for canonical atoms
-                atom_i_can = 7
+                atom_i_can = 2
 
 
             else:
