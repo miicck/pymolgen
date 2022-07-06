@@ -1,6 +1,7 @@
 import sys,os
 import random
 import numpy as np
+import argparse
 
 import networkx
 from networkx.algorithms import isomorphism
@@ -174,7 +175,7 @@ def reverse_canonical_mapping(fragment):
 
     return canonical_mapping
 
-def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file, remove_hydrogens, remove_hydrogens_parent_fragment, parent_mapping, outfile_name, n_mol, filters=False, unique=False, figure=None):
+def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file, remove_hydrogens, remove_hydrogens_parent_fragment, outfile_name, n_mol, filters=False, unique=False, figure=None):
 
     # build pains_database if using filters
     if filters:
@@ -193,6 +194,9 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
     if unique:
         candidate_list = []
         candidate_bond_list = []
+    else:
+        candidate_list = None
+        candidate_bond_list = None
 
     parent_mol = molecule_from_sdf(parent_file)
 
@@ -241,6 +245,10 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
         mol = build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, parent_mapping, filters, pains_database, candidate_list, candidate_bond_list, figure)
 
         if mol is not None:
+
+            smi = molecule_to_smiles(mol)
+            mw = mol.molecular_weight()
+            print('NEW_CANDIDATE %s %s %.1f' % (n, smi, mw))            
 
             lines = molecule_to_sdf(mol)
 
@@ -395,10 +403,6 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
         if filter_pass is False:
             return None
 
-    smi = molecule_to_smiles(mol)
-    mw = mol.molecular_weight()
-    print('NEW_CANDIDATE %s %.1f' % (smi, mw))
-
     return mol
 
 def is_new_candidate(frag_list, frag_bond_list, candidate_list, candidate_bond_list):
@@ -447,15 +451,31 @@ def combine_all_fragments(frag_mol_list, frag_list, frag_bond_list):
 
 if __name__ == '__main__':
 
-    random.seed(100)
+    parser = argparse.ArgumentParser(description='Pymolgen molecular generator from fragments')
+    parser.add_argument('-a','--fragments_sdf', help='SDF file of fragments',required=True)
+    parser.add_argument('-f','--fragments_txt', help='List of fragments in TXT file',required=True)
+    parser.add_argument('-d','--frequencies_txt', help='Bond frequencies dictionary in txt file',required=True)
+    parser.add_argument('-p','--parent_file', help='Parent Structure File in SDF format',required=True)
+    parser.add_argument('-x','--parent_fragment_file', help='Parent Fragment Structure File to search fragment database in SDF format',required=True)
+    parser.add_argument('-r','--remove_hydrogens', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points, numbered from 0',required=True)
+    parser.add_argument('-R','--remove_hydrogens_parent_fragment', type=int, nargs='+', help='Space-separated hydrogen atoms that will be created as attachment points for the parent fragment in database, numbered from 0',required=True)
+    parser.add_argument('-s','--seed', type=int, help='Seed for random number generator',required=False)
+    parser.add_argument('-o','--outfile_name', help='Output File Name',required=True)
+    parser.add_argument('-n','--n_mol', type=int, help='Number of molecules to generate',required=True)
+    parser.add_argument('--unique', action='store_true', help='Generate unique set of molecules', required=False)
 
-    outfile_name = sys.argv[1]
+    args = parser.parse_args()
 
-    build_molecule('fragments.sdf', 'fragments.txt', 'frequencies.txt', 'methane.sdf', 'methane.sdf', [4], [4], {5:2}, outfile_name, 1000, filters=True, unique=True)
+    if args.seed is not None:
+        random.seed(args.seed)
 
+    if args.unique:
+        print('Unique not fully working since does not take symmetry into account')
 
-
-
+    build_molecule(fragments_sdf=args.fragments_sdf, fragments_txt=args.fragments_txt, frequencies_txt=args.frequencies_txt, 
+        parent_file=args.parent_file, parent_fragment_file=args.parent_fragment_file, remove_hydrogens=args.remove_hydrogens, 
+        remove_hydrogens_parent_fragment=args.remove_hydrogens_parent_fragment, outfile_name=args.outfile_name, n_mol=args.n_mol, 
+        unique=args.unique, filters=True)
 
 
 
