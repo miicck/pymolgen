@@ -116,6 +116,7 @@ def get_random_neighbour(fragment_i, fragment_bond_frequencies):
     if len(fragment_bond_frequencies) == 0:
         print('fragment bond frequencies =', fragment_bond_frequencies)
         print('fragment_i =', fragment_i)
+
     draw = random.choices(population=keys, weights=vals, k=1)[0]
 
     if fragment_i == draw[0]:
@@ -221,9 +222,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
     print_molecule(parent_fragment_original)
     print_molecule(parent_fragment)
 
-    mapping = map_mols(parent_fragment_original.graph, parent_fragment.graph)
-
-    print(get_fragment_bond_frequencies(parent_fragment_i, 7, bond_frequencies))
+    parent_mapping = map_mols(parent_fragment_original.graph, parent_fragment.graph)
 
     print('parent_fragment')
     print_molecule(parent_fragment)
@@ -317,7 +316,9 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
                 fragment_i_mol = fragment_database[fragment_i]
 
                 # get mapped atom_i since fragment_bond_frequencies are stored for canonical atoms
-                atom_i_can = 4
+                atom_i_can = parent_mapping[atom_i]
+
+                #print('fragment bond frequencies =', get_fragment_bond_frequencies(fragment_i, atom_i_can, bond_frequencies))
 
 
             else:
@@ -345,26 +346,29 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
             # choose random neighbour
             new_frag_i, new_frag_i_atom = get_random_neighbour(fragment_i, fragment_bond_frequencies)
 
-            # add neighbour index in fragment_database to frag_list
-            frag_list.append(new_frag_i)
-
             # generate molecule object from new_frag_i
             new_frag = fragment_database[new_frag_i]
 
-            # get free valence points of new fragment
-            new_free_valence_list = new_frag.free_valence_list
+            if not new_frag.is_fluorine():
 
-            # add bond betweent current fragment and new fragment to list of bonds between fragments (frag_bond_list)
-            frag_bond_list.append((i, j, atom_i, new_frag_i_atom))
+                # add neighbour index in fragment_database to frag_list
+                frag_list.append(new_frag_i)
 
-            # remove atom from current fragment making bond to new fragment from frag_free_valence_list[i]
-            frag_free_valence_list[i].remove(atom_i)
+                # get free valence points of new fragment
+                new_free_valence_list = new_frag.free_valence_list
 
-            # remove atom from new fragment making bond to current fragment from new fragment's list of free valence points
-            new_free_valence_list.remove(new_frag_i_atom)
+                # add bond betweent current fragment and new fragment to list of bonds between fragments (frag_bond_list)
+                frag_bond_list.append((i, j, atom_i, new_frag_i_atom))
 
-            # add new_free_valence_list to the list of available valence points in molecule being built
-            frag_free_valence_list.append(new_free_valence_list)
+                # remove atom from current fragment making bond to new fragment from frag_free_valence_list[i]
+                frag_free_valence_list[i].remove(atom_i)
+
+                # remove atom from new fragment making bond to current fragment from new fragment's list of free valence points
+                try : new_free_valence_list.remove(new_frag_i_atom)
+                except: return None
+
+                # add new_free_valence_list to the list of available valence points in molecule being built
+                frag_free_valence_list.append(new_free_valence_list)
 
     for i in frag_list[1:]:
         frag_mol_list.append(fragment_database[i])
@@ -381,13 +385,19 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
 
     if filters:
         from pymolgen.newmol import filters_final_mol
-        filter_pass = filters_final_mol(mol, pains_database)
+        
+        try:
+            filter_pass = filters_final_mol(mol, pains_database)
+        except:
+            filter_pass = False
+            smi = molecule_to_smiles(mol)
+            print('Could not run filters', smi)
         if filter_pass is False:
             return None
 
     smi = molecule_to_smiles(mol)
     mw = mol.molecular_weight()
-    print('NEW_CANDIDATE %s %s' % (smi, mw))
+    print('NEW_CANDIDATE %s %.1f' % (smi, mw))
 
     return mol
 
@@ -437,11 +447,11 @@ def combine_all_fragments(frag_mol_list, frag_list, frag_bond_list):
 
 if __name__ == '__main__':
 
-    random.seed(1000)
+    random.seed(100)
 
     outfile_name = sys.argv[1]
 
-    build_molecule('fragments.sdf', 'fragments.txt', 'frequencies.txt', 'isoxazole-13.sdf', 'isoxazole-5.sdf', [13], [5,6,7], {5:2}, outfile_name, 100, filters=True, unique=True, figure='fig.sdf')
+    build_molecule('fragments.sdf', 'fragments.txt', 'frequencies.txt', 'methane.sdf', 'methane.sdf', [4], [4], {5:2}, outfile_name, 1000, filters=True, unique=True)
 
 
 

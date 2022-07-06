@@ -235,6 +235,17 @@ class Molecule:
 
         return self.graph.nodes[i]["element"] == "H"
 
+    def is_fluorine(self) -> bool:
+        """
+        Returns true if molecule is a fluorine
+
+        Returns
+        -------
+        True if the node is a fluorine
+        """
+
+        return self.graph.nodes[0]["element"] == "F"
+
     def get_hydrogen_neighbours(self, i: int) -> List[int]:
         """
         Returns list of hydrogen neighbours bonded to a particular node i
