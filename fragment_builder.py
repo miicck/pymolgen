@@ -2,6 +2,7 @@ import sys,os
 import random
 import numpy as np
 import argparse
+import subprocess
 
 import networkx
 from networkx.algorithms import isomorphism
@@ -14,7 +15,10 @@ def node_compare_element(node_1, node_2):
     return node_1["element"] == node_2["element"]
 
 def get_frag_mapping(fragments_txt):
-
+    """
+    Generates atom mapping as dictionary from original atom numbers to 0 - len(atoms)
+    Returns list of dictionaries as mapping for each fragment
+    """
     frag_mapping = []
 
     with open(fragments_txt) as infile:
@@ -135,7 +139,9 @@ def get_random_neighbour(fragment_i, fragment_bond_frequencies):
     return new_frag_i, new_frag_i_atom
 
 def update_bond_frequencies(bond_frequencies, frag_mapping):
-
+    """
+    Update bond frequencies for atom numbering in frag_mapping (typically numbering from 0)
+    """
     d = {}
 
     for key, val in bond_frequencies.items():
@@ -175,7 +181,7 @@ def reverse_canonical_mapping(fragment):
 
     return canonical_mapping
 
-def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file, remove_hydrogens, remove_hydrogens_parent_fragment, outfile_name, n_mol, filters=False, unique=False, figure=None):
+def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, parent_fragment_file, remove_hydrogens, remove_hydrogens_parent_fragment, outfile_name, n_mol, filters=False, unique=False, figure=None, rules=False):
 
     # build pains_database if using filters
     if filters:
@@ -239,10 +245,10 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
         with open(figure, 'w') as outfile:
             print('Writing to figure', figure)
 
-    n = 0
-    while n < n_mol:
+    n = 1
+    while n <= n_mol:
 
-        mol = build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, parent_mapping, filters, pains_database, candidate_list, candidate_bond_list, figure)
+        mol = build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, parent_mapping, filters, pains_database, candidate_list, candidate_bond_list, figure, rules)
 
         if mol is not None:
 
@@ -281,7 +287,7 @@ def build_molecule(fragments_sdf, fragments_txt, frequencies_txt, parent_file, p
 
             n += 1
 
-def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, parent_mapping, filters=False, pains_database=None, candidate_list=None, candidate_bond_list=None, figure=None):
+def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_database, bond_frequencies, parent_mapping, filters=False, pains_database=None, candidate_list=None, candidate_bond_list=None, figure=None, rules=False):
 
     #prepare parent fragment
     frag_list = []
@@ -357,13 +363,13 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
             # generate molecule object from new_frag_i
             new_frag = fragment_database[new_frag_i]
 
-            if not new_frag.is_fluorine():
+            # get free valence points of new fragment
+            new_free_valence_list = new_frag.free_valence_list
+
+            if not new_frag.is_fluorine() and new_frag_i_atom in new_free_valence_list:
 
                 # add neighbour index in fragment_database to frag_list
                 frag_list.append(new_frag_i)
-
-                # get free valence points of new fragment
-                new_free_valence_list = new_frag.free_valence_list
 
                 # add bond betweent current fragment and new fragment to list of bonds between fragments (frag_bond_list)
                 frag_bond_list.append((i, j, atom_i, new_frag_i_atom))
@@ -372,8 +378,19 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
                 frag_free_valence_list[i].remove(atom_i)
 
                 # remove atom from new fragment making bond to current fragment from new fragment's list of free valence points
-                try : new_free_valence_list.remove(new_frag_i_atom)
-                except: return None
+                try: new_free_valence_list.remove(new_frag_i_atom)
+                except: 
+                    #print_fragments([new_frag])
+                    smi = molecule_to_smiles(new_frag)
+                    print(smi)
+                    print_molecule(new_frag)
+                    lines = molecule_to_sdf(new_frag)
+                    with open('new_frag.sdf', 'w') as outfile:
+                        for line in lines:
+                            outfile.write(line)
+                    print(lines)
+                    raise Exception('Could not remove atom', new_frag_i_atom, 'from', new_free_valence_list, 'fragment_i =', fragment_i, 'new_frag_i=', new_frag_i)
+                    return None
 
                 # add new_free_valence_list to the list of available valence points in molecule being built
                 frag_free_valence_list.append(new_free_valence_list)
@@ -401,6 +418,17 @@ def build_mol_single(parent_mol, parent_fragment, parent_fragment_i, fragment_da
             smi = molecule_to_smiles(mol)
             print('Could not run filters', smi)
         if filter_pass is False:
+            return None
+
+    if rules:
+        smi = molecule_to_smiles(mol)
+        with open('rules.smi', 'w') as outfile:
+            outfile.write('%s\n' %smi)
+
+        result = subprocess.run(['/home/pczbf/Lilly-Medchem-Rules/Lilly_Medchem_Rules.rb rules.smi'], shell=True, stdout=subprocess.PIPE).stdout.decode('utf-8')
+
+        if result == '':
+            print('Failed rules', smi)
             return None
 
     return mol
@@ -463,6 +491,7 @@ if __name__ == '__main__':
     parser.add_argument('-o','--outfile_name', help='Output File Name',required=True)
     parser.add_argument('-n','--n_mol', type=int, help='Number of molecules to generate',required=True)
     parser.add_argument('--unique', action='store_true', help='Generate unique set of molecules', required=False)
+    parser.add_argument('--rules', action='store_true', help='Use rules to filter', required=False)
 
     args = parser.parse_args()
 
@@ -475,7 +504,7 @@ if __name__ == '__main__':
     build_molecule(fragments_sdf=args.fragments_sdf, fragments_txt=args.fragments_txt, frequencies_txt=args.frequencies_txt, 
         parent_file=args.parent_file, parent_fragment_file=args.parent_fragment_file, remove_hydrogens=args.remove_hydrogens, 
         remove_hydrogens_parent_fragment=args.remove_hydrogens_parent_fragment, outfile_name=args.outfile_name, n_mol=args.n_mol, 
-        unique=args.unique, filters=True)
+        unique=args.unique, rules=args.rules, filters=True)
 
 
 

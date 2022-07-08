@@ -59,5 +59,3 @@ def test_filters_final_mol():
     pains_database = gen_pains_database()
     print(filters_final_mol(mol, pains_database))
 
-
-test_filters_final_mol()
