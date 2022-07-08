@@ -158,6 +158,15 @@ class Molecule:
         """
         return max(self.graph.nodes[i]["valence"] - self.total_order_of_bonds(i), 0.0)
 
+    def set_hybridization(self):
+        """
+        Sets the hybridization of each atom according
+        to the free valence and number of neighbours
+        on that atom.
+        """
+        for n in self.graph.nodes:
+            self.graph.nodes[n]["hybridization"] = self.free_valence(n) + len(self.graph[n])
+
     def molecular_weight(self) -> float:
         d = mass_dict()
         mw = 0

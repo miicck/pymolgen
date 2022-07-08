@@ -85,7 +85,7 @@ def compound_dict(dict1, dict2):
 
 
 def node_compare_element(node_1, node_2):
-	return node_1["element"] == node_2["element"]
+	return node_1["element"] == node_2["element"] and node_1["hybridization"] == node_2["hybridization"]
 
 def get_fragment_index(fragment, fragment_database, fragment_database_len=None, atom_list_all=None):
 
@@ -113,7 +113,7 @@ def get_fragment_index(fragment, fragment_database, fragment_database_len=None, 
 
 		if fragment_len == fragment_database_len_i and fragment_atom_list == atom_list_all_i:
 
-			gm = isomorphism.GraphMatcher(fragment, fragment_database[i], node_match=node_compare_element, edge_match= lambda e1,e2: e1['order'] == e2['order'])
+			gm = isomorphism.GraphMatcher(fragment, fragment_database[i], node_match=node_compare_element)
 
 			if gm.is_isomorphic():
 				index.append(i)
@@ -285,25 +285,6 @@ def update_freq(frequencies, frag1_index, frag2_index, frag1_map, frag2_map, fra
 	#if (i,j,k,l) is new make new entry into dictionary
 	frequencies[(i,j,k,l)] = 1
 
-def get_unique_fragments_molecule(mol):
-	"""
-	Makes unique set of fragments and returns the unique set, the bond frequencies and the fragment frequencies
-	"""
-	fragments, pairs, bonds = get_fragments_dataset(mol)
-
-	frag_frequencies_mol = []
-
-	fragment_database_mol = []
-
-	frequencies_mol = {}
-
-	for i in range(len(pairs)):
-		update_bond_database(pair=pairs[i], bond=bonds[i], fragment_database=fragment_database_mol, frag_frequencies = frag_frequencies_mol,
-			frequencies=frequencies_mol, fragments=fragments)
-
-	return fragment_database_mol, frag_frequencies_mol, frequencies_mol
-
-
 def make_fragment_database(database_file, fragments_sdf=None, fragments_txt=None, frequencies_txt=None, frag_frequencies_txt=None, max_n=None, verbose=False):
 
 	if fragments_sdf is not None:
@@ -403,7 +384,7 @@ def save_frag_frequencies_txt(frag_frequencies, frag_frequencies_txt):
 
 def map_mols(mol1, mol2):
 
-	gm = isomorphism.GraphMatcher(mol1, mol2, node_match=node_compare_element, edge_match= lambda e1,e2: e1['order'] == e2['order'])
+	gm = isomorphism.GraphMatcher(mol1, mol2, node_match=node_compare_element)
 
 	all_mappings = []
 
@@ -415,7 +396,7 @@ def map_mols(mol1, mol2):
 	return mapping
 
 def get_canonical_mapping(fragment):
-	gm = isomorphism.GraphMatcher(fragment, fragment, node_match=node_compare_element, edge_match= lambda e1,e2: e1['order'] == e2['order'])
+	gm = isomorphism.GraphMatcher(fragment, fragment, node_match=node_compare_element)
 
 	all_mappings = []
 

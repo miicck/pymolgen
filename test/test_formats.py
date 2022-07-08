@@ -125,3 +125,28 @@ def test_read_from_sdf_valences():
 	print(elements)
 	print(valences)
 
+
+def test_read_from_sdf_hybridization():
+
+	mol = molecule_from_sdf('../datasets/sdf/mol-1.sdf')
+
+	elements = []
+	valences = []
+	hybridizations = []
+
+	for i in mol.graph.nodes:
+		elements.append(mol.graph.nodes[i]['element'])
+
+	for i in mol.graph.nodes:
+		valences.append(mol.graph.nodes[i]['valence'])
+
+	for i in mol.graph.nodes:
+		hybridizations.append(mol.graph.nodes[i]['hybridization'])
+
+	assert elements == ['C', 'C', 'C', 'C', 'N', 'C', 'O', 'C', 'S', 'O', 'O', 'C', 'C', 'N', 'C', 'C', 'C', 'C', 'C', 'C', 'C', 'C', 'N', 'N', 'C', 'C', 'C', 'C', 'C', 'F', 'C', 'C', 'F', 'C', 'N', 'O', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H']
+
+	assert hybridizations == [4, 3, 3, 3, 3, 3, 1, 4, 4, 1, 1, 3, 3, 3, 4, 3, 3, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3, 3, 3, 1, 3, 3, 1, 3, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+
+	assert valences == [4, 4, 4, 4, 3, 4, 2, 4, 6, 2, 2, 4, 4, 3, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 4, 4, 4, 4, 4, 1, 4, 4, 1, 4, 3, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+
+test_read_from_sdf_hybridization()

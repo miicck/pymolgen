@@ -208,7 +208,7 @@ def molecule_from_sdf(sdffilename: str) -> 'Molecule':
     mol.graph = graph_from_atoms_bonds(atoms, bonds, valences)
     if valences is None:
         mol.set_valence_from_bonds()
-
+    mol.set_hybridization()
     return mol
 
 def molecule_from_sdf_lines(lines) -> 'Molecule':
@@ -234,7 +234,7 @@ def molecule_from_sdf_lines(lines) -> 'Molecule':
     mol.graph = graph_from_atoms_bonds(atoms, bonds, valences)
     if valences is None:
         mol.set_valence_from_bonds()
-
+    mol.set_hybridization()
     return mol
 
 def molecule_from_sdf_large(sdffilename: str, start_line: int) -> 'Molecule':
@@ -262,7 +262,7 @@ def molecule_from_sdf_large(sdffilename: str, start_line: int) -> 'Molecule':
 
     if valences is None:
         mol.set_valence_from_bonds()
-
+    mol.set_hybridization()
     return mol    
 
 def molecule_to_atoms_bonds(molecule: Molecule) -> (List, Tuple[int, int, int]):

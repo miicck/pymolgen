@@ -12,7 +12,7 @@ from pymolgen.molecule_formats import *
 from pymolgen.fragment_mol import print_fragments, get_canonical_mapping, map_mols
 
 def node_compare_element(node_1, node_2):
-    return node_1["element"] == node_2["element"]
+    return node_1["element"] == node_2["element"] and node_1["hybridization"] == node_2["hybridization"]
 
 def get_frag_mapping(fragments_txt):
     """
@@ -101,7 +101,7 @@ def find_fragment(fragment, fragment_database):
 
     for i in range(len(fragment_database)):
 
-        gm = isomorphism.GraphMatcher(fragment.graph, fragment_database[i].graph, node_match=node_compare_element, edge_match= lambda e1,e2: e1['order'] == e2['order'])
+        gm = isomorphism.GraphMatcher(fragment.graph, fragment_database[i].graph, node_match=node_compare_element)
 
         if gm.is_isomorphic():
 
@@ -165,7 +165,7 @@ def get_length(list):
     return length
 
 def reverse_canonical_mapping(fragment):
-    gm = isomorphism.GraphMatcher(fragment, fragment, node_match=node_compare_element, edge_match= lambda e1,e2: e1['order'] == e2['order'])
+    gm = isomorphism.GraphMatcher(fragment, fragment, node_match=node_compare_element)
 
     all_mappings = []
 
