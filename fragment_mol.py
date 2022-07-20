@@ -261,7 +261,11 @@ def update_fragment_database(fragment_database, fragment, frequencies, frag_freq
 	return frag1_index, frag1_map
 
 
-def update_freq(frequencies, frag1_index, frag2_index, frag1_map, frag2_map, frag1_bond, frag2_bond):
+def update_freq(frequencies, frag1_index, frag2_index, frag1_map, frag2_map, frag1_bond, frag2_bond, val=None):
+
+	if val is None:
+		val = 1
+
 
 	#order fragments according to their indeces in the fragment database into i,j
 	#then order atoms making bonds into k,l
@@ -279,29 +283,40 @@ def update_freq(frequencies, frag1_index, frag2_index, frag1_map, frag2_map, fra
 	#increase frequencies of (i,j,k,l) if already in database
 	for key in frequencies.keys():
 		if (i,j,k,l) == key:
-			frequencies[(i,j,k,l)] += 1	
+			frequencies[(i,j,k,l)] += val	
 			return
 
 	#if (i,j,k,l) is new make new entry into dictionary
-	frequencies[(i,j,k,l)] = 1
+	frequencies[(i,j,k,l)] = val
 
-def make_fragment_database(database_file, fragments_sdf=None, fragments_txt=None, frequencies_txt=None, frag_frequencies_txt=None, max_n=None, verbose=False):
+def make_fragment_database(database_file, fragments_sdf=None, fragments_txt=None, frequencies_txt=None, frag_frequencies_txt=None, max_n=None, verbose=False, fragment_database=None, frequencies=None, frag_frequencies=None):
 
 	if fragments_sdf is not None:
 		outfile = open(fragments_sdf, 'w')
 
 	dataset = SDFDatasetLarge(database_file, max_n)
 
-	fragment_database = []
+	if fragment_database is None:
+		fragment_database = []
+
 	fragment_database_len = []
+
+	for i in fragment_database:
+		fragment_database_len.append(len(i))
 
 	atom_list_all = []
 
-	frequencies = {}
+	for i in fragment_database:
+		atom_list_all.append(get_atom_list(i))
+
+	if frequencies is None:
+		frequencies = {}
+	
 	t0 = time.time()
 	counter = 0
 
-	frag_frequencies = []
+	if frag_frequencies is None:
+		frag_frequencies = []
 
 	#loop through every molecule in the dataset
 	for i in range(len(dataset)):
@@ -358,10 +373,51 @@ def make_fragment_database(database_file, fragments_sdf=None, fragments_txt=None
 			update_freq(frequencies, frag1_index, frag2_index, frag1_map, frag2_map, frag1_bond, frag2_bond)
 
 	save_fragments_txt(fragment_database, fragments_txt)
+
+	frag_mapping = get_frag_mapping(fragments_txt)
+
+	frequencies = update_bond_frequencies(frequencies, frag_mapping)
+
 	save_frequencies_txt(frequencies, frequencies_txt)
 	save_frag_frequencies_txt(frag_frequencies, frag_frequencies_txt)
 
 	return fragment_database, frequencies, frag_frequencies
+
+def get_frag_mapping(fragments_txt):
+    """
+    Generates atom mapping as dictionary from original atom numbers to 0 - len(atoms)
+    Returns list of dictionaries as mapping for each fragment
+    """
+    frag_mapping = []
+
+    with open(fragments_txt) as infile:
+        for line in infile:
+            atoms = line.split(']')[0].strip('[').split(',')
+            atoms = [int(x.strip()) for x in atoms]
+            d = {}
+            for i in range(len(atoms)):
+                d[atoms[i]] = i
+            frag_mapping.append(d)
+
+    return frag_mapping
+
+def update_bond_frequencies(bond_frequencies, frag_mapping):
+    """
+    Update bond frequencies for atom numbering in frag_mapping (typically numbering from 0)
+    """
+    d = {}
+
+    for key, val in bond_frequencies.items():
+
+        i = key[0]
+        j = key[1]
+
+        k = frag_mapping[i][key[2]]
+        l = frag_mapping[j][key[3]]
+
+        d[(i,j,k,l)] = val
+
+    return d
 
 def save_fragments_txt(fragment_database, fragments_txt):
 	if fragments_txt is not None:
@@ -421,7 +477,6 @@ def renumber_fragment(fragment):
 	fragment = networkx.relabel_nodes(fragment, mapping)
 
 	return fragment
-
 
 
 if __name__ == '__main__':

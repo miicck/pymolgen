@@ -9,28 +9,10 @@ from networkx.algorithms import isomorphism
 
 from pymolgen.generate import SDFDatasetLargeRAM
 from pymolgen.molecule_formats import *
-from pymolgen.fragment_mol import print_fragments, get_canonical_mapping, map_mols
+from pymolgen.fragment_mol import print_fragments, get_canonical_mapping, map_mols, get_frag_mapping, update_bond_frequencies
 
 def node_compare_element(node_1, node_2):
     return node_1["element"] == node_2["element"] and node_1["hybridization"] == node_2["hybridization"]
-
-def get_frag_mapping(fragments_txt):
-    """
-    Generates atom mapping as dictionary from original atom numbers to 0 - len(atoms)
-    Returns list of dictionaries as mapping for each fragment
-    """
-    frag_mapping = []
-
-    with open(fragments_txt) as infile:
-        for line in infile:
-            atoms = line.split(']')[0].strip('[').split(',')
-            atoms = [int(x.strip()) for x in atoms]
-            d = {}
-            for i in range(len(atoms)):
-                d[atoms[i]] = i
-            frag_mapping.append(d)
-
-    return frag_mapping
 
 def get_frag_frequencies(frag_frequencies_txt):
     frag_frequencies = []
@@ -137,23 +119,6 @@ def get_random_neighbour(fragment_i, fragment_bond_frequencies):
         new_frag_i_atom = draw[2]
 
     return new_frag_i, new_frag_i_atom
-
-def update_bond_frequencies(bond_frequencies, frag_mapping):
-    """
-    Update bond frequencies for atom numbering in frag_mapping (typically numbering from 0)
-    """
-    d = {}
-
-    for key, val in bond_frequencies.items():
-
-        i = key[0]
-        j = key[1]
-        k = frag_mapping[i][key[2]]
-        l = frag_mapping[j][key[3]]
-
-        d[(i,j,k,l)] = val
-
-    return d
 
 def get_length(list):
 
