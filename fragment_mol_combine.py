@@ -17,6 +17,7 @@ def combine_fragment_databases(fragments_sdf_1, fragments_txt_1, frequencies_txt
 	frag_frequencies = get_frag_frequencies(frag_frequencies_txt_1)
 
 	frag_mapping = get_frag_mapping(fragments_txt_1)
+	print(frag_mapping)
 
 	frequencies = update_bond_frequencies(frequencies, frag_mapping)
 
@@ -85,6 +86,7 @@ def combine_fragment_databases(fragments_sdf_1, fragments_txt_1, frequencies_txt
 
 
 if __name__ == '__main__':
+
 
 	fragments_sdf_1 = sys.argv[1]
 	fragments_txt_1 = sys.argv[2]

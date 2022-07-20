@@ -374,9 +374,9 @@ def make_fragment_database(database_file, fragments_sdf=None, fragments_txt=None
 
 	save_fragments_txt(fragment_database, fragments_txt)
 
-	frag_mapping = get_frag_mapping(fragments_txt)
+	#frag_mapping = get_frag_mapping(fragments_txt)
 
-	frequencies = update_bond_frequencies(frequencies, frag_mapping)
+	#frequencies = update_bond_frequencies(frequencies, frag_mapping)
 
 	save_frequencies_txt(frequencies, frequencies_txt)
 	save_frag_frequencies_txt(frag_frequencies, frag_frequencies_txt)
@@ -408,6 +408,7 @@ def update_bond_frequencies(bond_frequencies, frag_mapping):
     d = {}
 
     for key, val in bond_frequencies.items():
+        print(key, val)
 
         i = key[0]
         j = key[1]
