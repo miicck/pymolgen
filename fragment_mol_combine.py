@@ -1,7 +1,7 @@
 import sys,os
 
-from fragment_mol import *
-from fragment_builder import *
+from pymolgen.fragment_mol import *
+from pymolgen.fragment_builder import *
 
 def combine_fragment_databases(fragments_sdf_1, fragments_txt_1, frequencies_txt_1, frag_frequencies_txt_1, fragments_sdf_2, fragments_txt_2, frequencies_txt_2, frag_frequencies_txt_2, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out):
 
@@ -17,7 +17,6 @@ def combine_fragment_databases(fragments_sdf_1, fragments_txt_1, frequencies_txt
 	frag_frequencies = get_frag_frequencies(frag_frequencies_txt_1)
 
 	frag_mapping = get_frag_mapping(fragments_txt_1)
-	print(frag_mapping)
 
 	frequencies = update_bond_frequencies(frequencies, frag_mapping)
 
@@ -85,21 +84,45 @@ def combine_fragment_databases(fragments_sdf_1, fragments_txt_1, frequencies_txt
 	save_frag_frequencies_txt(frag_frequencies, frag_frequencies_txt_out)
 
 
+def loop(n, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequencies_txt_in, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out):
+
+	for i in range(n-1):
+
+		fragments_sdf_1 = '%s%s.sdf' %(fragments_sdf_in, i)
+		fragments_txt_1 = '%s%s.txt' %(fragments_txt_in, i) 
+		frequencies_txt_1 = '%s%s.txt' %(frequencies_txt_in, i) 
+		frag_frequencies_txt_1 = '%s%s.txt' %(frag_frequencies_txt_in, i)
+		fragments_sdf_2 = '%s%s.sdf' %(fragments_sdf_in, i+1)
+		fragments_txt_2 = '%s%s.txt' %(fragments_txt_in, i+1) 
+		frequencies_txt_2 = '%s%s.txt' %(frequencies_txt_in, i+1) 
+		frag_frequencies_txt_2 = '%s%s.txt' %(frag_frequencies_txt_in, i+1)
+
+		print(fragments_sdf_1, fragments_txt_1, frequencies_txt_1, frag_frequencies_txt_1, fragments_sdf_2, fragments_txt_2, frequencies_txt_2, frag_frequencies_txt_2, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out)
+
+		combine_fragment_databases(fragments_sdf_1, fragments_txt_1, frequencies_txt_1, frag_frequencies_txt_1, fragments_sdf_2, fragments_txt_2, frequencies_txt_2, frag_frequencies_txt_2, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out)
+
+def renumber_frequencies(fragments_txt_in, frequencies_txt_in, frequencies_txt_out):
+
+	frequencies = get_bond_frequencies(frequencies_txt_in)
+
+	frag_mapping = get_frag_mapping(fragments_txt_in)
+
+	frequencies = update_bond_frequencies(frequencies, frag_mapping)
+
+	save_frequencies_txt(frequencies, frequencies_txt_out)
+
 if __name__ == '__main__':
 
 
-	fragments_sdf_1 = sys.argv[1]
-	fragments_txt_1 = sys.argv[2]
-	frequencies_txt_1 = sys.argv[3]
-	frag_frequencies_txt_1 = sys.argv[4]
-	fragments_sdf_2 = sys.argv[5]
-	fragments_txt_2 = sys.argv[6]
-	frequencies_txt_2 = sys.argv[7]
-	frag_frequencies_txt_2 = sys.argv[8]
-	fragments_sdf_out = sys.argv[9]
-	fragments_txt_out = sys.argv[10]
-	frequencies_txt_out = sys.argv[11]
-	frag_frequencies_txt_out = sys.argv[12]
+	n = int(sys.argv[1])
+	fragments_sdf_in = sys.argv[2]
+	fragments_txt_in = sys.argv[3]
+	frequencies_txt_in = sys.argv[4]
+	frag_frequencies_txt_in = sys.argv[5]
+	fragments_sdf_out = sys.argv[6]
+	fragments_txt_out = sys.argv[7]
+	frequencies_txt_out = sys.argv[8]
+	frag_frequencies_txt_out = sys.argv[9]
 
 
-	combine_fragment_databases(fragments_sdf_1, fragments_txt_1, frequencies_txt_1, frag_frequencies_txt_1, fragments_sdf_2, fragments_txt_2, frequencies_txt_2, frag_frequencies_txt_2, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out)
+	loop(n, fragments_sdf_in, fragments_txt_in, frequencies_txt_in, frag_frequencies_txt_in, fragments_sdf_out, fragments_txt_out, frequencies_txt_out, frag_frequencies_txt_out)
