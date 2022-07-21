@@ -139,7 +139,6 @@ def save_fragments_sdf(fragments, outfile_name):
     for fragment in fragments:
         mol = Molecule()
         mol.graph = fragment.copy()
-        mol.set_valence_from_bonds()
 
         lines = molecule_to_sdf(mol)
 
@@ -432,7 +431,6 @@ def update_bond_frequencies(bond_frequencies, frag_mapping):
     d = {}
 
     for key, val in bond_frequencies.items():
-        print(key, val)
 
         i = key[0]
         j = key[1]
@@ -507,10 +505,21 @@ def renumber_fragment(fragment):
 if __name__ == '__main__':
 
     database_file = sys.argv[1]
+
+    out_sub = sys.argv[2]
+
+    fragments_sdf = 'fragments%s.sdf' %out_sub
+    fragments_txt = 'fragments%s.txt' %out_sub
+    frequencies_txt = 'frequencies%s.txt' %out_sub
+    frag_frequencies_txt = 'frag_frequencies%s.txt' %out_sub
+
+    make_fragment_database(database_file, fragments_sdf, fragments_txt, frequencies_txt, frag_frequencies_txt)
+    print('Normal termination')
+
+
+"""
     fragments_sdf = sys.argv[2]
     fragments_txt = sys.argv[3]
     frequencies_txt = sys.argv[4]
     frag_frequencies_txt = sys.argv[5]
-
-    make_fragment_database(database_file, fragments_sdf, fragments_txt, frequencies_txt, frag_frequencies_txt)
-    print('Normal termination')
+"""
