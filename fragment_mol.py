@@ -11,377 +11,401 @@ home = os.path.expanduser("~")
 
 def get_fragments_dataset(mol):
 
-	single_bonds = mol.get_single_bonds_not_h_not_c()
+    single_bonds = mol.get_single_bonds_not_h_not_c()
 
-	if single_bonds is False:
-		return False, False, False
+    if single_bonds is False:
+        return False, False, False
 
-	fragments = split_mol(mol, single_bonds)
+    fragments = split_mol(mol, single_bonds)
 
-	pairs = get_pairs(single_bonds, fragments)
+    pairs = get_pairs(single_bonds, fragments)
 
-	return fragments, pairs, single_bonds
+    return fragments, pairs, single_bonds
 
 def print_fragments(fragments):
 
-	out = ''
+    out = ''
 
-	for fragment in fragments:
+    for fragment in fragments:
 
-		atoms = []
+        atoms = []
 
-		for i in fragment.nodes:
-			atoms.append(fragment.nodes[i]['element'])
+        for i in fragment.nodes:
+            atoms.append(fragment.nodes[i]['element'])
 
-		out += str(fragment.nodes) + ' ' + str(atoms) + '\n'
+        out += str(fragment.nodes) + ' ' + str(atoms) + '\n'
 
-	return out
+    return out
 
 
 def split_mol(mol, bonds):
 
-	for bond in bonds:
-		mol.graph.remove_edge(bond[0], bond[1])
+    for bond in bonds:
+        mol.graph.remove_edge(bond[0], bond[1])
 
-	new = [mol.graph.subgraph(c) for c in networkx.connected_components(mol.graph)]
+    new = [mol.graph.subgraph(c) for c in networkx.connected_components(mol.graph)]
 
-	return new
+    return new
 
 def get_pairs(bonds, fragments):
 
-	pairs = []
+    pairs = []
 
-	for bond in bonds:
-		a = bond[0]
-		b = bond[1]
+    for bond in bonds:
+        a = bond[0]
+        b = bond[1]
 
-		for i in range(len(fragments)):
-			if a in fragments[i]:
-				index_a = i
-			if b in fragments[i]:
-				index_b = i
+        for i in range(len(fragments)):
+            if a in fragments[i]:
+                index_a = i
+            if b in fragments[i]:
+                index_b = i
 
-		pairs.append([index_a, index_b])
+        pairs.append([index_a, index_b])
 
-	return pairs
+    return pairs
 
 
 def is_fragment_new(fragment, fragment_database):
 
-	for i in fragment_database:
-		if networkx.is_isomorphic(i,fragment):
-			return False
+    for i in fragment_database:
+        if networkx.is_isomorphic(i,fragment):
+            return False
 
-	return True
+    return True
 
 def compound_dict(dict1, dict2):
 
-	d = {}
+    d = {}
 
-	for key, val in dict1.items():
-		d[key] = dict2[val]
+    for key, val in dict1.items():
+        d[key] = dict2[val]
 
-	return d
+    return d
 
 
 def node_compare_element(node_1, node_2):
-	return node_1["element"] == node_2["element"] and node_1["hybridization"] == node_2["hybridization"]
+    return node_1["element"] == node_2["element"] and node_1["hybridization"] == node_2["hybridization"]
 
 def get_fragment_index(fragment, fragment_database, fragment_database_len=None, atom_list_all=None):
 
-	is_new = True
+    is_new = True
 
-	index = []
+    index = []
 
-	map = get_canonical_mapping(fragment)
+    map = get_canonical_mapping(fragment)
 
-	fragment_len = len(fragment)
+    fragment_len = len(fragment)
 
-	fragment_atom_list = get_atom_list(fragment)
+    fragment_atom_list = get_atom_list(fragment)
 
-	for i in range(len(fragment_database)):
+    for i in range(len(fragment_database)):
 
-		if fragment_database_len is not None:
-			fragment_database_len_i = fragment_database_len[i]
-		else:
-			fragment_database_len_i = len(fragment_database[i])
+        if fragment_database_len is not None:
+            fragment_database_len_i = fragment_database_len[i]
+        else:
+            fragment_database_len_i = len(fragment_database[i])
 
-		if atom_list_all is not None:
-			atom_list_all_i = atom_list_all[i]
-		else:
-			atom_list_all_i = get_atom_list(fragment_database[i])
+        if atom_list_all is not None:
+            atom_list_all_i = atom_list_all[i]
+        else:
+            atom_list_all_i = get_atom_list(fragment_database[i])
 
-		if fragment_len == fragment_database_len_i and fragment_atom_list == atom_list_all_i:
+        if fragment_len == fragment_database_len_i and fragment_atom_list == atom_list_all_i:
 
-			gm = isomorphism.GraphMatcher(fragment, fragment_database[i], node_match=node_compare_element)
+            gm = isomorphism.GraphMatcher(fragment, fragment_database[i], node_match=node_compare_element)
 
-			if gm.is_isomorphic():
-				index.append(i)
-				is_new = False
-				newmap = gm.mapping
+            if gm.is_isomorphic():
+                index.append(i)
+                is_new = False
+                newmap = gm.mapping
 
-				map = get_canonical_mapping(fragment_database[i])
+                map = get_canonical_mapping(fragment_database[i])
 
-				map = compound_dict(newmap, map)
+                map = compound_dict(newmap, map)
 
-	if len(index) > 1:
-		raise Exception('fragment in fragment_database more than once')
+    if len(index) > 1:
+        raise Exception('fragment in fragment_database more than once')
 
-	if is_new is True:
-		index.append(len(fragment_database))
+    if is_new is True:
+        index.append(len(fragment_database))
 
-	return is_new, index[0], map
+    return is_new, index[0], map
 
 def save_fragments_sdf(fragments, outfile_name):
 
-	outfile = open(outfile_name, 'w')
+    outfile = open(outfile_name, 'w')
 
-	for fragment in fragments:
-		mol = Molecule()
-		mol.graph = fragment.copy()
-		mol.set_valence_from_bonds()
+    for fragment in fragments:
+        mol = Molecule()
+        mol.graph = fragment.copy()
+        mol.set_valence_from_bonds()
 
-		lines = molecule_to_sdf(mol)
+        lines = molecule_to_sdf(mol)
 
-		for line in lines:
-			outfile.write(line)
-		outfile.write('$$$$\n')
+        for line in lines:
+            outfile.write(line)
+        outfile.write('$$$$\n')
 
-	outfile.close()
+    outfile.close()
 
 def save_fragment_sdf(fragment, fragments_sdf):
 
-	outfile = open(fragments_sdf, 'a')
+    outfile = open(fragments_sdf, 'a')
 
-	mol = Molecule()
-	mol.graph = fragment.copy()
+    mol = Molecule()
+    mol.graph = fragment.copy()
 
-	lines = molecule_to_sdf(mol)
+    lines = molecule_to_sdf(mol)
 
-	for line in lines:
-		outfile.write(line)
-	outfile.write('$$$$\n')
+    for line in lines:
+        outfile.write(line)
+    outfile.write('$$$$\n')
 
-	outfile.close()
+    outfile.close()
 
 def get_atom_list(fragment):
 
-	atom_list = []
+    atom_list = []
 
-	for i in fragment.nodes:
-		atom_list.append(fragment.nodes[i]["element"])
+    for i in fragment.nodes:
+        atom_list.append(fragment.nodes[i]["element"])
 
-	atom_list.sort()
+    atom_list.sort()
 
-	return atom_list
+    return atom_list
 
 def to_np_matrix(fragments):
-	for fragment in fragments:
-		matrix = networkx.to_numpy_matrix(fragment)
+    for fragment in fragments:
+        matrix = networkx.to_numpy_matrix(fragment)
 
 def update_bond_database(pair, bond, fragment_database, fragments, frequencies, frag_frequencies, fragments_sdf=None, fragment_database_len=None, atom_list_all=None):
 
-	frag1 = pair[0]
-	frag2 = pair[1]
+    frag1 = pair[0]
+    frag2 = pair[1]
 
-	frag1_bond = bond[0]
-	frag2_bond = bond[1]
+    frag1_bond = bond[0]
+    frag2_bond = bond[1]
 
-	frag1_is_new, frag1_index, frag1_map = get_fragment_index(fragments[frag1], fragment_database, fragment_database_len, atom_list_all)
-	
-	if frag1_is_new: 
+    frag1_is_new, frag1_index, frag1_map = get_fragment_index(fragments[frag1], fragment_database, fragment_database_len, atom_list_all)
+    
+    if frag1_is_new: 
 
-		frag_frequencies.append(1)
+        frag_frequencies.append(1)
 
-		fragment_database.append(fragments[frag1])
+        fragment_database.append(fragments[frag1])
 
-		#fragment_database_len list to increase performance of get_fragment_index
-		if fragment_database_len is not None:
-			fragment_database_len.append(len(fragments[frag1]))
-		#atom_list_all to increase performance of get_fragment_index
-		if atom_list_all is not None:
-			atom_list_all.append(get_atom_list(fragments[frag1]))
+        #fragment_database_len list to increase performance of get_fragment_index
+        if fragment_database_len is not None:
+            fragment_database_len.append(len(fragments[frag1]))
+        #atom_list_all to increase performance of get_fragment_index
+        if atom_list_all is not None:
+            atom_list_all.append(get_atom_list(fragments[frag1]))
 
-		if fragments_sdf is not None:
-			save_fragment_sdf(fragments[frag1], fragments_sdf)
+        if fragments_sdf is not None:
+            save_fragment_sdf(fragments[frag1], fragments_sdf)
 
-	else:
-		frag_frequencies[frag1_index] += 1
+    else:
+        frag_frequencies[frag1_index] += 1
 
-	frag2_is_new, frag2_index, frag2_map = get_fragment_index(fragments[frag2], fragment_database, fragment_database_len, atom_list_all)
+    frag2_is_new, frag2_index, frag2_map = get_fragment_index(fragments[frag2], fragment_database, fragment_database_len, atom_list_all)
 
-	if frag2_is_new:
+    if frag2_is_new:
 
-		frag_frequencies.append(1)
+        frag_frequencies.append(1)
 
-		fragment_database.append(fragments[frag2])
+        fragment_database.append(fragments[frag2])
 
-		#fragment_database_len list to increase performance of get_fragment_index
-		if fragment_database_len is not None:
-			fragment_database_len.append(len(fragments[frag2]))
-		#atom_list_all to increase performance of get_fragment_index
-		if atom_list_all is not None:
-			atom_list_all.append(get_atom_list(fragments[frag2]))
+        #fragment_database_len list to increase performance of get_fragment_index
+        if fragment_database_len is not None:
+            fragment_database_len.append(len(fragments[frag2]))
+        #atom_list_all to increase performance of get_fragment_index
+        if atom_list_all is not None:
+            atom_list_all.append(get_atom_list(fragments[frag2]))
 
-		if fragments_sdf is not None:
-			save_fragment_sdf(fragments[frag2], fragments_sdf)
+        if fragments_sdf is not None:
+            save_fragment_sdf(fragments[frag2], fragments_sdf)
 
 
-	else:
+    else:
 
-		frag_frequencies[frag2_index] += 1
+        frag_frequencies[frag2_index] += 1
 
-	update_freq(frequencies, frag1_index, frag2_index, frag1_map, frag2_map, frag1_bond, frag2_bond)
+    update_freq(frequencies, frag1_index, frag2_index, frag1_map, frag2_map, frag1_bond, frag2_bond)
 
 
 def update_fragment_database(fragment_database, fragment, frequencies, frag_frequencies, fragments_sdf=None, fragment_database_len=None, atom_list_all=None):
 
-	frag1_is_new, frag1_index, frag1_map = get_fragment_index(fragment, fragment_database, fragment_database_len, atom_list_all)
+    frag1_is_new, frag1_index, frag1_map = get_fragment_index(fragment, fragment_database, fragment_database_len, atom_list_all)
 
-	if frag1_is_new: 
+    if frag1_is_new: 
 
-		frag_frequencies.append(1)
+        frag_frequencies.append(1)
 
-		fragment_database.append(fragment)
+        fragment_database.append(fragment)
 
-		#fragment_database_len list to increase performance of get_fragment_index
-		if fragment_database_len is not None:
-			fragment_database_len.append(len(fragment))
+        #fragment_database_len list to increase performance of get_fragment_index
+        if fragment_database_len is not None:
+            fragment_database_len.append(len(fragment))
 
-		#atom_list_all to increase performance of get_fragment_index
-		if atom_list_all is not None:
-			atom_list_all.append(get_atom_list(fragment))
+        #atom_list_all to increase performance of get_fragment_index
+        if atom_list_all is not None:
+            atom_list_all.append(get_atom_list(fragment))
 
-		if fragments_sdf is not None:
-			save_fragment_sdf(fragment, fragments_sdf)
+        if fragments_sdf is not None:
+            save_fragment_sdf(fragment, fragments_sdf)
 
-	else:
-		frag_frequencies[frag1_index] += 1
+    else:
+        frag_frequencies[frag1_index] += 1
 
-	return frag1_index, frag1_map
+    return frag1_index, frag1_map
 
 
 def update_freq(frequencies, frag1_index, frag2_index, frag1_map, frag2_map, frag1_bond, frag2_bond, val=None):
 
-	if val is None:
-		val = 1
+    if val is None:
+        val = 1
 
 
-	#order fragments according to their indeces in the fragment database into i,j
-	#then order atoms making bonds into k,l
-	if frag1_index < frag2_index:
-		i = frag1_index
-		j = frag2_index
-		k = frag1_map[frag1_bond]
-		l = frag2_map[frag2_bond]
-	else:
-		i = frag2_index
-		j = frag1_index
-		k = frag2_map[frag2_bond]
-		l = frag1_map[frag1_bond]
+    #order fragments according to their indeces in the fragment database into i,j
+    #then order atoms making bonds into k,l
+    if frag1_index < frag2_index:
+        i = frag1_index
+        j = frag2_index
+        k = frag1_map[frag1_bond]
+        l = frag2_map[frag2_bond]
+    else:
+        i = frag2_index
+        j = frag1_index
+        k = frag2_map[frag2_bond]
+        l = frag1_map[frag1_bond]
 
-	#increase frequencies of (i,j,k,l) if already in database
-	for key in frequencies.keys():
-		if (i,j,k,l) == key:
-			frequencies[(i,j,k,l)] += val	
-			return
+    #increase frequencies of (i,j,k,l) if already in database
+    for key in frequencies.keys():
+        if (i,j,k,l) == key:
+            frequencies[(i,j,k,l)] += val   
+            return
 
-	#if (i,j,k,l) is new make new entry into dictionary
-	frequencies[(i,j,k,l)] = val
+    #if (i,j,k,l) is new make new entry into dictionary
+    frequencies[(i,j,k,l)] = val
 
 def make_fragment_database(database_file, fragments_sdf=None, fragments_txt=None, frequencies_txt=None, frag_frequencies_txt=None, max_n=None, verbose=False, fragment_database=None, frequencies=None, frag_frequencies=None):
 
-	if fragments_sdf is not None:
-		outfile = open(fragments_sdf, 'w')
+    if fragments_sdf is not None:
+        outfile = open(fragments_sdf, 'w')
 
-	dataset = SDFDatasetLarge(database_file, max_n)
+    dataset = SDFDatasetLarge(database_file, max_n)
 
-	if fragment_database is None:
-		fragment_database = []
+    if fragment_database is None:
+        fragment_database = []
 
-	fragment_database_len = []
+    fragment_database_len = []
 
-	for i in fragment_database:
-		fragment_database_len.append(len(i))
+    for i in fragment_database:
+        fragment_database_len.append(len(i))
 
-	atom_list_all = []
+    atom_list_all = []
 
-	for i in fragment_database:
-		atom_list_all.append(get_atom_list(i))
+    for i in fragment_database:
+        atom_list_all.append(get_atom_list(i))
 
-	if frequencies is None:
-		frequencies = {}
-	
-	t0 = time.time()
-	counter = 0
+    if frequencies is None:
+        frequencies = {}
+    
+    t0 = time.time()
+    counter = 0
 
-	if frag_frequencies is None:
-		frag_frequencies = []
+    if frag_frequencies is None:
+        frag_frequencies = []
 
-	#loop through every molecule in the dataset
-	for i in range(len(dataset)):
+    #loop through every molecule in the dataset
+    for i in range(len(dataset)):
 
-		counter += 1
+        counter += 1
 
-		if verbose: print('%s ' %counter, end='', flush=True)
+        if verbose: print('%s ' %counter, end='', flush=True)
 
-		if counter % 100 == 0: 
-			if verbose: print()
-			print('TIME', counter, time.time() - t0, flush=True)
-			t0 = time.time()
+        if counter % 100 == 0: 
+            if verbose: print()
+            print('TIME', counter, time.time() - t0, flush=True)
+            t0 = time.time()
 
-		if counter % 5000 == 0:
-			if verbose:
-				print(print_fragments(fragment_database), flush=True)
-				print(frequencies, flush=True)
-				print(frag_frequencies, flush=True)
+        if counter % 5000 == 0:
+            if verbose:
+                print(print_fragments(fragment_database), flush=True)
+                print(frequencies, flush=True)
+                print(frag_frequencies, flush=True)
 
-			save_fragments_txt(fragment_database, fragments_txt)
-			save_frequencies_txt(frequencies, frequencies_txt)
-			save_frag_frequencies_txt(frag_frequencies, frag_frequencies_txt)
+            save_fragments_txt(fragment_database, fragments_txt)
+            save_frequencies_txt(frequencies, frequencies_txt)
+            save_frag_frequencies_txt(frag_frequencies, frag_frequencies_txt)
 
-		#load new molecule from database
-		mol = dataset.load_molecule(i)
+        #load new molecule from database
+        mol = dataset.load_molecule(i)
 
-		#split molecule and get fragments, pairs means pairs of fragments bonded together, and bonds is bonds between atoms of each fragment
-		fragments, pairs, bonds = get_fragments_dataset(mol)
-		if fragments == False:
-			continue
-		frag1_index_list = []
-		frag1_map_list = []
+        #split molecule and get fragments, pairs means pairs of fragments bonded together, and bonds is bonds between atoms of each fragment
+        fragments, pairs, bonds = get_fragments_dataset(mol)
+        if fragments == False:
+            continue
+        frag1_index_list = []
+        frag1_map_list = []
 
-		#update database of fragments, if fragment exists increase frag_frequency, otherwise add fragment
-		for fragment in fragments:
-			frag1_index, frag1_map = update_fragment_database(fragment_database, fragment, frequencies, frag_frequencies, fragments_sdf, fragment_database_len, atom_list_all)
+        #update database of fragments, if fragment exists increase frag_frequency, otherwise add fragment
+        for fragment in fragments:
+            frag1_index, frag1_map = update_fragment_database(fragment_database, fragment, frequencies, frag_frequencies, fragments_sdf, fragment_database_len, atom_list_all)
 
-			frag1_index_list.append(frag1_index)
-			frag1_map_list.append(frag1_map)
+            frag1_index_list.append(frag1_index)
+            frag1_map_list.append(frag1_map)
 
-		for i in range(len(pairs)):
+        for i in range(len(pairs)):
 
-			frag1 = pairs[i][0]
-			frag2 = pairs[i][1]
+            frag1 = pairs[i][0]
+            frag2 = pairs[i][1]
 
-			frag1_index = frag1_index_list[frag1]
-			frag1_map = frag1_map_list[frag1]
+            frag1_index = frag1_index_list[frag1]
+            frag1_map = frag1_map_list[frag1]
 
-			frag1_bond = bonds[i][0]
-			frag2_bond = bonds[i][1]
+            frag1_bond = bonds[i][0]
+            frag2_bond = bonds[i][1]
 
-			frag2_is_new, frag2_index, frag2_map = get_fragment_index(fragments[frag2], fragment_database, fragment_database_len, atom_list_all)
+            frag2_is_new, frag2_index, frag2_map = get_fragment_index(fragments[frag2], fragment_database, fragment_database_len, atom_list_all)
 
-			update_freq(frequencies, frag1_index, frag2_index, frag1_map, frag2_map, frag1_bond, frag2_bond)
+            update_freq(frequencies, frag1_index, frag2_index, frag1_map, frag2_map, frag1_bond, frag2_bond)
 
-	save_fragments_txt(fragment_database, fragments_txt)
+    #frag_mapping = get_frag_mapping_from_database(fragment_database)
 
-	#frag_mapping = get_frag_mapping(fragments_txt)
+    #relabel_fragment_database(fragment_database, frag_mapping)
 
-	#frequencies = update_bond_frequencies(frequencies, frag_mapping)
+    #frequencies = update_bond_frequencies(frequencies, frag_mapping)
 
-	save_frequencies_txt(frequencies, frequencies_txt)
-	save_frag_frequencies_txt(frag_frequencies, frag_frequencies_txt)
+    save_fragments_txt(fragment_database, fragments_txt)
 
-	return fragment_database, frequencies, frag_frequencies
+    save_frequencies_txt(frequencies, frequencies_txt)
+    save_frag_frequencies_txt(frag_frequencies, frag_frequencies_txt)
+
+    return fragment_database, frequencies, frag_frequencies
+
+def relabel_fragment_database(fragment_database, frag_mapping):
+
+    for i in range(len(fragment_database)):
+        fragment = fragment_database[i]
+        mapping = frag_mapping[i]
+        networkx.relabel_nodes(fragment, mapping, copy=False)
+
+def get_frag_mapping_from_database(fragment_database):
+
+    frag_mapping = []
+
+    for fragment in fragment_database:
+        atoms = []
+        d = {} 
+        for i in fragment.nodes:
+            atoms.append(i)
+        for i in range(len(atoms)):
+            d[atoms[i]] = i
+        frag_mapping.append(d)      
+
+    return frag_mapping
 
 def get_frag_mapping(fragments_txt):
     """
@@ -421,72 +445,72 @@ def update_bond_frequencies(bond_frequencies, frag_mapping):
     return d
 
 def save_fragments_txt(fragment_database, fragments_txt):
-	if fragments_txt is not None:
-		with open(fragments_txt, 'w') as outfile:
-			outfile.write(print_fragments(fragment_database))
+    if fragments_txt is not None:
+        with open(fragments_txt, 'w') as outfile:
+            outfile.write(print_fragments(fragment_database))
 
 def save_frequencies_txt(frequencies, frequencies_txt):
-	if frequencies_txt is not None:
-		with open(frequencies_txt, 'w') as outfile:
-			for key, val in frequencies.items():
-				outfile.write(f"{str(key)}: {str(val)}\n")
+    if frequencies_txt is not None:
+        with open(frequencies_txt, 'w') as outfile:
+            for key, val in frequencies.items():
+                outfile.write(f"{str(key)}: {str(val)}\n")
 
 def save_frag_frequencies_txt(frag_frequencies, frag_frequencies_txt):
-	if frag_frequencies_txt is not None:
-		with open(frag_frequencies_txt, 'w') as outfile:
-			for i in range(len(frag_frequencies)):
-				outfile.write('%s ' %frag_frequencies[i])
-				if i + 1 % 10 == 0: outfile.write('\n')
-			outfile.write('\n')
+    if frag_frequencies_txt is not None:
+        with open(frag_frequencies_txt, 'w') as outfile:
+            for i in range(len(frag_frequencies)):
+                outfile.write('%s ' %frag_frequencies[i])
+                if i + 1 % 10 == 0: outfile.write('\n')
+            outfile.write('\n')
 
 def map_mols(mol1, mol2):
 
-	gm = isomorphism.GraphMatcher(mol1, mol2, node_match=node_compare_element)
+    gm = isomorphism.GraphMatcher(mol1, mol2, node_match=node_compare_element)
 
-	all_mappings = []
+    all_mappings = []
 
-	for i in gm.isomorphisms_iter():
-		all_mappings.append(i)
+    for i in gm.isomorphisms_iter():
+        all_mappings.append(i)
 
-	mapping = all_mappings[0]
+    mapping = all_mappings[0]
 
-	return mapping
+    return mapping
 
 def get_canonical_mapping(fragment):
-	gm = isomorphism.GraphMatcher(fragment, fragment, node_match=node_compare_element)
+    gm = isomorphism.GraphMatcher(fragment, fragment, node_match=node_compare_element)
 
-	all_mappings = []
+    all_mappings = []
 
-	for mapping in gm.isomorphisms_iter():
-		all_mappings.append(mapping)
+    for mapping in gm.isomorphisms_iter():
+        all_mappings.append(mapping)
 
-	canonical_mapping = all_mappings[0]
+    canonical_mapping = all_mappings[0]
 
-	for i in all_mappings:
-		for key, val in i.items():
-			if canonical_mapping[key] > val:
-				canonical_mapping[key] = val
+    for i in all_mappings:
+        for key, val in i.items():
+            if canonical_mapping[key] > val:
+                canonical_mapping[key] = val
 
-	return canonical_mapping
+    return canonical_mapping
 
 def renumber_fragment(fragment):
 
-	fragment = networkx.convert_node_labels_to_integers(fragment,first_label=0)
+    fragment = networkx.convert_node_labels_to_integers(fragment,first_label=0)
 
-	mapping = get_canonical_mapping(fragment)
+    mapping = get_canonical_mapping(fragment)
 
-	fragment = networkx.relabel_nodes(fragment, mapping)
+    fragment = networkx.relabel_nodes(fragment, mapping)
 
-	return fragment
+    return fragment
 
 
 if __name__ == '__main__':
 
-	database_file = sys.argv[1]
-	fragments_sdf = sys.argv[2]
-	fragments_txt = sys.argv[3]
-	frequencies_txt = sys.argv[4]
-	frag_frequencies_txt = sys.argv[5]
+    database_file = sys.argv[1]
+    fragments_sdf = sys.argv[2]
+    fragments_txt = sys.argv[3]
+    frequencies_txt = sys.argv[4]
+    frag_frequencies_txt = sys.argv[5]
 
-	make_fragment_database(database_file, fragments_sdf, fragments_txt, frequencies_txt, frag_frequencies_txt)
-	print('Normal termination')
+    make_fragment_database(database_file, fragments_sdf, fragments_txt, frequencies_txt, frag_frequencies_txt)
+    print('Normal termination')
