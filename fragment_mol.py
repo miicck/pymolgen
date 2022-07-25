@@ -18,9 +18,29 @@ def get_fragments_dataset(mol):
 
     fragments = split_mol(mol, single_bonds)
 
+    new_fragments = [networkx.convert_node_labels_to_integers(fragment,first_label=0) for fragment in fragments]
+
     pairs = get_pairs(single_bonds, fragments)
 
-    return fragments, pairs, single_bonds
+    frag_mapping = []
+
+    for frag in fragments:
+        frag_mapping.append(get_frag_mapping_from_graph(frag))
+
+    new_single_bonds = []
+
+    for i in range(len(single_bonds)):
+        bond_a = single_bonds[i][0]
+        bond_b = single_bonds[i][1]
+        frag_a = pairs[i][0]
+        frag_b = pairs[i][1]
+
+        new_bond_a = frag_mapping[frag_a][bond_a] 
+        new_bond_b = frag_mapping[frag_b][bond_b]
+
+        new_single_bonds.append([new_bond_a, new_bond_b])
+
+    return new_fragments, pairs, new_single_bonds
 
 def print_fragments(fragments):
 
@@ -418,11 +438,22 @@ def get_frag_mapping(fragments_txt):
             atoms = line.split(']')[0].strip('[').split(',')
             atoms = [int(x.strip()) for x in atoms]
             d = {}
+            #this would be to number them according to rank: new = [sorted(atoms).index(x) for x in atoms]
             for i in range(len(atoms)):
                 d[atoms[i]] = i
             frag_mapping.append(d)
 
     return frag_mapping
+
+def get_frag_mapping_from_graph(fragment):
+
+    d = {}
+
+    for n, i in enumerate(fragment.nodes):
+        d[i] = n
+
+    return d
+
 
 def update_bond_frequencies(bond_frequencies, frag_mapping):
     """
@@ -481,7 +512,7 @@ def get_canonical_mapping(fragment):
 
     for mapping in gm.isomorphisms_iter():
         all_mappings.append(mapping)
-
+    
     canonical_mapping = all_mappings[0]
 
     for i in all_mappings:
